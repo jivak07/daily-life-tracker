@@ -17,6 +17,19 @@
     </form>
 
     <div id="habit-list"></div>
+
+    <h2>Goals</h>
+
+      <form id="goal-form">
+        <input type="text" id="goal-name" placeholder="Add your goal name (e.g. Read Books)" required>
+        <div class="goal-form-now">
+          <input type="number" id="goal-target" placeholder="target-number" min="1" required>
+          <input type="text" id="goal-input" placeholder="Unit (e.g. books, km)">
+        </div>
+        <button type="submit">Add Goal</button>
+      </form>
+
+      <div id="goal-list"></div>
   </div>
 
   <script src="script.js"></script>
