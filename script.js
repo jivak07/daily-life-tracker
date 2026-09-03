@@ -1,183 +1,296 @@
-const habitForm = document.getElementById('habit-form');
-const habitNameInput = document.getElementById('habit-name');
-const habitList = document.getElementById('habit-list');
+let userName = localStorage.getItem('userName');
+if (!userName) {
+    userName = prompt('What should we call you?') || 'Guest';
+    localStorage.setItem('userName', userName);
+}
+
+function getFormattedDate() {
+    const now = new Date();
+    const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+    return now.toLocaleDateString('en', options);
+}
+
+document.getElementById('greeting').textContent = '\u{1F464} ' + userName + ' \u00b7 ' + getFormattedDate();
+
+const tabButtons = document.querySelectorAll('.tab-btn');
+const tabPanels = document.querySelectorAll('.tab-panel');
+
+tabButtons.forEach(function (button) {
+    button.addEventListener('click', function () {
+        const targetTab = button.getAttribute('data-tab');
+
+        tabButtons.forEach(function (btn) { btn.classList.remove('active'); });
+        tabPanels.forEach(function (panel) { panel.classList.remove('active'); });
+
+        button.classList.add('active');
+        document.getElementById(targetTab).classList.add('active');
+    });
+});
+
+function getTodayString() {
+    const now = new Date();
+    return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+}
+
+const taskForm = document.getElementById('task-form');
+const taskIconInput = document.getElementById('task-icon');
+const taskNameInput = document.getElementById('task-name');
+const taskTimeInput = document.getElementById('task-time');
+const routineSubtitle = document.getElementById('routine-subtitle');
+const routineProgressFill = document.getElementById('routine-progress-fill');
+const taskList = document.getElementById('task-list');
+
+let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+function renderRoutine() {
+    taskList.innerHTML = '';
+
+    const today = getTodayString();
+    const doneToday = tasks.filter(function (t) { return t.completedDates.indexOf(today) !== -1; }).length;
+    const percent = tasks.length > 0 ? Math.round((doneToday / tasks.length) * 100) : 0;
+
+    routineSubtitle.textContent = doneToday + '/' + tasks.length + ' done today';
+    routineProgressFill.style.width = percent + '%';
+
+    if (tasks.length === 0) {
+        taskList.innerHTML = '<p class="empty">No tasks yet. Add one above.</p>';
+        return;
+    }
+
+    tasks.forEach(function (task) {
+        const isDone = task.completedDates.indexOf(today) !== -1;
+
+        const taskDiv = document.createElement('div');
+        taskDiv.className = 'task-item' + (isDone ? ' done' : '');
+        taskDiv.innerHTML = `
+            <button class="check-btn" onclick="toggleTask(${task.id})">${isDone ? '\u2713' : ''}</button>
+            <div class="task-icon">${task.icon}</div>
+            <div class="task-info">
+                <div class="task-name">${task.name}</div>
+                <div class="task-time">${task.time}</div>
+            </div>
+            <button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button>
+        `;
+        taskList.appendChild(taskDiv);
+    });
+}
+
+function toggleTask(id) {
+    const task = tasks.find(function (t) { return t.id === id; });
+    const today = getTodayString();
+    const index = task.completedDates.indexOf(today);
+
+    if (index === -1) {
+        task.completedDates.push(today);
+    } else {
+        task.completedDates.splice(index, 1);
+    }
+
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    renderRoutine();
+}
+
+function deleteTask(id) {
+    tasks = tasks.filter(function (t) { return t.id !== id; });
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    renderRoutine();
+}
+
+taskForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const newTask = {
+        id: Date.now(),
+        icon: taskIconInput.value.trim() || '\u2022',
+        name: taskNameInput.value,
+        time: taskTimeInput.value,
+        completedDates: []
+    };
+
+    tasks.push(newTask);
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+
+    renderRoutine();
+    taskForm.reset();
+});
+
 const goalForm = document.getElementById('goal-form');
+const goalIconInput = document.getElementById('goal-icon');
 const goalNameInput = document.getElementById('goal-name');
 const goalTargetInput = document.getElementById('goal-target');
 const goalUnitInput = document.getElementById('goal-unit');
+const goalsSubtitle = document.getElementById('goals-subtitle');
 const goalList = document.getElementById('goal-list');
 
-let habits = JSON.parse(localStorage.getItem('habits')) || [];
 let goals = JSON.parse(localStorage.getItem('goals')) || [];
 
-function getTodayString() {
-  const now = new Date();
-  return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-}
-
-function calculateStreak(habit) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  let streak = 0;
-  let checkDate = new Date(today);
-
-  while (true) {
-    const dateStr = checkDate.getFullYear() + '-' + String(checkDate.getMonth() + 1).padStart(2, '0') + '-' + String(checkDate.getDate()).padStart(2, '0');
-    if (habit.completedDates.indexOf(dateStr) !== -1) {
-      streak++;
-      checkDate.setDate(checkDate.getDate() - 1);
-    } else {
-      break;
-    }
-  }
-
-  return streak;
-}
-
-function renderHabits() {
-  habitList.innerHTML = '';
-
-  if (habits.length === 0) {
-    habitList.innerHTML = '<p class="empty">No habits added yet. Add one habit to get started.</p>';
-    return;
-  }
-
-  const today = getTodayString();
-
-  habits.forEach(function (habit) {
-    const isDoneToday = habit.completedDates.indexOf(today) !== -1;
-    const streak = calculateStreak(habit);
-
-    const habitDiv = document.createElement('div');
-    habitDiv.className = 'habit';
-    habitDiv.innerHTML = `
-      <input type="checkbox" ${isDoneToday ? 'checked' : ''} onchange="toggleHabit(${habit.id})">
-      <span class="habit-name">${habit.name}</span>
-      <span class="habit-streak">${streak} day streak</span>
-      <button class="delete-btn" onclick="deleteHabit(${habit.id})">Delete</button>
-    `;
-    habitList.appendChild(habitDiv);
-  });
-}
-
-function toggleHabit(id) {
-  const habit = habits.find(function (h) { return h.id === id; });
-  const today = getTodayString();
-  const index = habit.completedDates.indexOf(today);
-
-  if (index === -1) {
-    habit.completedDates.push(today);
-  } else {
-    habit.completedDates.splice(index, 1);
-  }
-
-  localStorage.setItem('habits', JSON.stringify(habits));
-  renderHabits();
-}
-
-function deleteHabit(id) {
-  const confirmed = confirm('Are you sure you want to delete this habit? This cannot be restore or undo');
-  if (!confirmed) {
-    return;
-  }
-
-  habits = habits.filter(function (h) { return h.id !== id; });
-  localStorage.setItem('habits', JSON.stringify(habits));
-  renderHabits();
-}
-
-habitForm.addEventListener('submit', function (e) {
-  e.preventDefault();
-
-  const newHabit = {
-    id: Date.now(),
-    name: habitNameInput.value,
-    completedDates: []
-  };
-
-  habits.push(newHabit);
-  localStorage.setItem('habits', JSON.stringify(habits));
-
-  renderHabits();
-  habitForm.reset();
-});
-
 function renderGoals() {
-  goalList.innerHTML = '';
+    goalList.innerHTML = '';
 
-  if (goals.length === 0) {
-    goalList.innerHTML = '<p class="empty">No goals added yet. Add one goal to get started.</p>';
-    return;
-  }
+    const completed = goals.filter(function (g) { return g.current >= g.target; }).length;
+    goalsSubtitle.textContent = completed + '/' + goals.length + ' completed';
 
-  goals.forEach(function (goal) {
-    const percent = Math.min(100, Math.round((goal.current / goal.target) * 100));
-    const isComplete = goal.current >= goal.target;
-    const unitLabel = goal.unit ? goal.unit : '';
+    if (goals.length === 0) {
+        goalList.innerHTML = '<p class="empty">No goals yet. Add one above.</p>';
+        return;
+    }
 
-    const goalDiv = document.createElement('div');
-    goalDiv.className = 'goal' + (isComplete ? ' goal-complete' : '');
-    goalDiv.innerHTML = `
-      <p class="goal-name">${goal.name}${isComplete ? ' \u2713' : ''}</p>
-      <div class="goal-progress-bar">
-        <div class="goal-progress-fill" style="width: ${percent}%"></div>
-      </div>
-      <p class="goal-progress-text">${goal.current} / ${goal.target} ${unitLabel}</p>
-      <div class="goal-controls">
-        <input type="number" class="goal-add-input" id="add-input-${goal.id}" placeholder="Add">
-        <button onclick="addProgress(${goal.id})">Add</button>
-        <button class="delete-btn" onclick="deleteGoal(${goal.id})">Delete</button>
-      </div>
-    `;
-    goalList.appendChild(goalDiv);
-  });
+    goals.forEach(function (goal) {
+        const percent = Math.min(100, Math.round((goal.current / goal.target) * 100));
+        const isComplete = goal.current >= goal.target;
+
+        const goalDiv = document.createElement('div');
+        goalDiv.className = 'goal-item' + (isComplete ? ' done' : '');
+        goalDiv.innerHTML = `
+            <div class="goal-top">
+                <div class="goal-icon">${goal.icon}</div>
+                <div class="goal-info">
+                    <div class="goal-name">${goal.name}</div>
+                    <div class="goal-progress-text">${goal.current} / ${goal.target} ${goal.unit}</div>
+                </div>
+                <button class="delete-btn" onclick="deleteGoal(${goal.id})">Delete</button>
+            </div>
+            <div class="goal-progress-bar">
+                <div class="goal-progress-fill" style="width: ${percent}%"></div>
+            </div>
+            <div class="goal-controls">
+                <button onclick="adjustGoal(${goal.id}, -1)">-</button>
+                <button onclick="adjustGoal(${goal.id}, 1)">+</button>
+            </div>
+        `;
+        goalList.appendChild(goalDiv);
+    });
 }
 
-function addProgress(id) {
-  const input = document.getElementById('add-input-' + id);
-  const amount = Number(input.value);
-
-  if (isNaN(amount) || amount <= 0) {
-    alert('Please enter a valid number.');
-    return;
-  }
-
-  const goal = goals.find(function (g) { return g.id === id; });
-  goal.current += amount;
-
-  localStorage.setItem('goals', JSON.stringify(goals));
-  renderGoals();
+function adjustGoal(id, amount) {
+    const goal = goals.find(function (g) { return g.id === id; });
+    goal.current = Math.max(0, goal.current + amount);
+    localStorage.setItem('goals', JSON.stringify(goals));
+    renderGoals();
 }
 
 function deleteGoal(id) {
-  const confirmed = confirm('Are you sure, you want to delete this goal? This cannot be restore or undo');
-  if (!confirmed) {
-    return;
-  }
-
-  goals = goals.filter(function (g) { return g.id !== id; });
-  localStorage.setItem('goals', JSON.stringify(goals));
-  renderGoals();
+    goals = goals.filter(function (g) { return g.id !== id; });
+    localStorage.setItem('goals', JSON.stringify(goals));
+    renderGoals();
 }
 
 goalForm.addEventListener('submit', function (e) {
-  e.preventDefault();
+    e.preventDefault();
 
-  const newGoal = {
-    id: Date.now(),
-    name: goalNameInput.value,
-    target: Number(goalTargetInput.value),
-    unit: goalUnitInput.value,
-    current: 0
-  };
+    const newGoal = {
+        id: Date.now(),
+        icon: goalIconInput.value.trim() || '\u2022',
+        name: goalNameInput.value,
+        target: Number(goalTargetInput.value),
+        unit: goalUnitInput.value,
+        current: 0
+    };
 
-  goals.push(newGoal);
-  localStorage.setItem('goals', JSON.stringify(goals));
+    goals.push(newGoal);
+    localStorage.setItem('goals', JSON.stringify(goals));
 
-  renderGoals();
-  goalForm.reset();
+    renderGoals();
+    goalForm.reset();
 });
 
-renderHabits();
+const habitForm = document.getElementById('habit-form');
+const habtIconInput = document.getElementById('habit-icon');
+const habitNameInput = document.getElementById('habit-name');
+const habitSubtitle = document.getElementById('habits-subtitle');
+const habitList = document.getElementById('habit-list');
+
+let habits = JSON.parse(localStorage.getItem('habits')) || [];
+
+function calculateStreak(habit) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let streak = 0;
+    let checkDate = new Date(today);
+
+    while (true) {
+        const dateStr = checkDate.getFullYear() + '-' + String(checkDate.getMonth() + 1).padStart(2, '0') + '-' + String(checkDate.getDate()).padStart(2, '0');
+        if (habit.completedDates.indexOf(dateStr) !== -1) {
+            streak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+            break;
+        }
+    }
+
+    return streak;
+}
+
+function renderHabits() {
+    habitList.innerHTML = '';
+
+    const today = getTodayString();
+    const doneToday = habits.filter(function (h) { return h.completedDates.indexOf(today) !== -1; }).length;
+    habitsSubtitle.textContent = doneToday + '/' + habits.length + ' done today';
+
+    if (habits.length === 0) {
+        habitList.innerHTML = '<p class="empty">No habits yet. Add one above.</p>';
+        return;
+    }
+
+    habits.forEach(function (habit) {
+        const isDone = habit.completedDates.indexOf(today) !== -1;
+        const streak = calculateStreak(habit);
+
+        const habitDiv = document.createElement('div');
+        habitDiv.className = 'habit-item' + (isDone ? ' done' : '');
+        habitDiv.innerHTML = `
+            <button class="habit-check-btn" onclick="toggleHabit(${habit.id})">${isDone ? '\u2713' : ''}</button>
+            <div class="habit-icon">${habit.icon}</div>
+            <div class="habit-info">
+                <div class="habit-name">${habit.name}</div>
+                <div class="habit-streak">${streak} day streak</div>
+            </div>
+            <button class="delete-btn" onclick="deleteHabit(${habit.id})">Delete</button>
+        `;
+        habitList.appendChild(habitDiv);
+    });
+}
+
+function toggleHabit(id) {
+    const habit = habits.find(function (h) { return h.id === id; });
+    const today = getTodayString();
+    const index = habit.completedDates.indexOf(today);
+
+    if (index === -1) {
+        habit.completedDates.push(today);
+    } else {
+        habit.completedDates.splice(index, 1);
+    }
+
+    localStorage.setItem('habits', JSON.stringify(habits));
+    renderHabits();
+}
+
+function deleteHabit(id) {
+    habits = habits.filter(function (h) { return h.id !== id; });
+    localStorage.setItem('habits', JSON.stringify(habits));
+    renderHabits();
+}
+
+habitForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const newHabit = {
+        id: Date.now(),
+        icon: habitIconInput.value.trim() || '\u2022',
+        name: habitNameInput.value,
+        completedDates: []
+    };
+
+    habits.push(newHabit);
+    localStorage.setItem('habits', JSON.stringify(habits));
+
+    renderHabits();
+    habitForm.reset();
+});
+
+renderRoutine();
 renderGoals();
+renderHabits();
