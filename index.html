@@ -7,29 +7,80 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Daily Life Tracker</h1>
-    <p class="subtitle">Build habits that actually stick.</p>
+  <div class="app">
+    <header class="app-header">
+      <h1>⚡ Daily Life Tracker</h1>
+      <p class="greeting" id="greeting"></p>
+    </header>
 
-    <form id="habit-form">
-      <input type="text" id="habit-name" placeholder="Add a habit (e.g. Read, Exercise)" required>
-      <button type="submit">Add Habit</button>
-    </form>
+    <nav class="tab-bar">
+      <button class="tab-btn active" data-tab="routine">
+        <span class="tab-icon">📅</span>
+        <span class="tab-label">Routine</span>
+      </button>
+      <button class="tab-btn" data-tab="goals">
+        <span class="tab-icon">🎯</span>
+        <span class="tab-label">Goals</span>
+      </button>
+      <button class="tab-btn" data-tab="habits">
+        <span class="tab-icon">✅</span>
+        <span class="tab-label">Habits</span>
+      </button>
+    </nav>
 
-    <div id="habit-list"></div>
-
-    <h2>Goals</h>
-
-      <form id="goal-form">
-        <input type="text" id="goal-name" placeholder="Add your goal name (e.g. Read Books)" required>
-        <div class="goal-form-now">
-          <input type="number" id="goal-target" placeholder="target-number" min="1" required>
-          <input type="text" id="goal-input" placeholder="Unit (e.g. books, km)">
+    <main class="tab-content">
+      <section id="routine" class="tab-panel active">
+        <div class="tab-header">
+          <div class="tab-title">Daily Routine</div>
+          <div class="tab-subtitle" id="routine-subtitle"></div>
         </div>
-        <button type="submit">Add Goal</button>
-      </form>
 
-      <div id="goal-list"></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="routine-progress-fill"></div>
+        </div>
+
+        <form id="task-form">
+          <input type="text" id="task-icon" placeholder="Icon (e.g. 📖)" maxlength="2">
+          <input type="text" id="task-name" placeholder="Task name" required>
+          <input type="text" id="task-time" placeholder="Time (e.g. 6:00 AM)">
+          <button type="submit">Add</button>
+        </form>
+
+        <div id="task-list"></div>
+      </section>
+
+      <section id="goals" class="tab-panel">
+        <div class="tab-header">
+          <div class="tab-title">Goals</div>
+          <div class="tab-subtitle" id="goals-subtitle"></div>
+        </div>
+
+        <form id="goal-form">
+          <input type="text" id="goal-icon" placeholder="Icon (e.g. 📚)" maxlength="2">
+          <input type="text" id="goal-name" placeholder="Goal name" required>
+          <input type="number" id="goal-target" placeholder="Target" min="1" required>
+          <input type="text" id="goal-unit" placeholder="Unit (e.g. books)">
+          <button type="submit">Add</button>
+        </form>
+
+        <div id="goal-list"></div>
+      </section>
+
+      <section id="habits" class="tab-panel">
+        <div class="tab-header">
+          <div class="tab-title">Habits</div>
+          <div class="tab-subtitle" id="habits-subtitle"></div>
+        </div>
+
+        <form id="habit-form">
+          <input type="text" id="habit-icon" placeholder="Icon (e.g. 💧)" maxlength="2">
+          <input type="text" id="habit-name" placeholder="Habit name" required>
+          <button type="submit">Add</button>
+        </form>
+
+        <div id="habit-list"></div>
+      </section>
+    </main>
   </div>
 
   <script src="script.js"></script>
