@@ -195,9 +195,9 @@ goalForm.addEventListener('submit', function (e) {
 });
 
 const habitForm = document.getElementById('habit-form');
-const habtIconInput = document.getElementById('habit-icon');
+const habitIconInput = document.getElementById('habit-icon');
 const habitNameInput = document.getElementById('habit-name');
-const habitSubtitle = document.getElementById('habits-subtitle');
+const habitsSubtitle = document.getElementById('habits-subtitle');
 const habitList = document.getElementById('habit-list');
 
 let habits = JSON.parse(localStorage.getItem('habits')) || [];
@@ -291,6 +291,86 @@ habitForm.addEventListener('submit', function (e) {
     habitForm.reset();
 });
 
+const timerModeEl = document.getElementById('timer-mode');
+const timerDisplayEl = document.getElementById('timer-display');
+const timerStartBtn = document.getElementById('timer-start-btn');
+const timerResetBtn = document.getElementById('timer-reset-btn');
+const focusMinutesInput = document.getElementById('focus-minutes');
+const breakMinutesInput = document.getElementById('break-minutes');
+const timerSubtitle = document.getElementById('timer-subtitle');
+
+let timerMode = 'focus';
+let timerSecondsLeft = 25 * 60;
+let timerRunning = false;
+let timerInterval = null;
+let sessionLog = JSON.parse(localStorage.getItem('sessionLog')) || {};
+
+function formatTime(totalSeconds) {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+}
+
+function getMinutesValue(inputEl, fallback) {
+    const value = Number(inputEl.value);
+    return value > 0 ? value : fallback;
+}
+
+function updateTimerDisplay() {
+    timerDisplayEl.textContent = formatTime(timerSecondsLeft);
+    timerModeEl.textContent = timerMode === 'focus' ? 'Focus' : 'Break';
+    timerStartBtn.textContent = timerRunning ? 'Pause' : 'Start';
+
+    const today = getTodayString();
+    const count = sessionLog[today] || 0;
+    timerSubtitle.textContent = count + ' focus sessions today';
+}
+
+function switchTimerMode() {
+    const today = getTodayString();
+
+    if (timerMode === 'focus') {
+        sessionLog[today] = (sessionLog[today] || 0) + 1;
+        localStorage.setItem('sessionLog', JSON.stringify(sessionLog));
+        timerMode = 'break';
+        timerSecondsLeft = getMinutesValue(breakMinutesInput, 5) * 60;
+    } else {
+        timerMode = 'focus';
+        timerSecondsLeft = getMinutesValue(focusMinutesInput, 25) * 60;
+    }
+}
+
+function tickTimer() {
+    timerSecondsLeft--;
+
+    if (timerSecondsLeft < 0) {
+        switchTimerMode();
+    }
+
+    updateTimerDisplay();
+}
+
+timerStartBtn.addEventListener('click', function () {
+    timerRunning = !timerRunning;
+
+    if (timerRunning) {
+        timerInterval = setInterval(tickTimer, 1000);
+    } else {
+        clearInterval(timerInterval);
+    }
+
+    updateTimerDisplay();
+});
+
+timerResetBtn.addEventListener('click', function () {
+    timerRunning = false;
+    clearInterval(timerInterval);
+    timerMode = 'focus';
+    timerSecondsLeft = getMinutesValue(focusMinutesInput, 25) * 60;
+    updateTimerDisplay();
+});
+
 renderRoutine();
 renderGoals();
 renderHabits();
+updateTimerDisplay();
