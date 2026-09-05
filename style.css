@@ -485,3 +485,84 @@ form button {
   font-size: 13px;
   outline: none;
 }
+
+.score-card {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.1));
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.score-label {
+  font-size: 13px;
+  color: #a5b4fc;
+  margin-bottom: 6px;
+}
+
+.score-value {
+  font-size: 40px;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.mini-scores {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.mini-score {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+}
+
+.mini-score-label {
+  font-size: 11px;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.mini-score-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.slider-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slider-row + .slider-row {
+  margin-top: 14px;
+}
+
+.slider-label {
+  font-size: 12px;
+  color: #64748b;
+  flex: 0 0 50px;
+}
+
+.slider-row input[type="range"] {
+  flex: 1;
+}
+
+.slider-emoji {
+  font-size: 18px;
+  flex: 0 0 24px;
+  text-align: center;
+}
