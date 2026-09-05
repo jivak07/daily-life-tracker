@@ -28,6 +28,10 @@ tabButtons.forEach(function (button) {
         if (targetTab === 'overview') {
             renderOverview();
         }
+
+        if (targetTab === 'history') {
+            renderHistory();
+        }
     });
 });
 
@@ -387,6 +391,7 @@ const moodEmojis = ['\u{1F61E}', '\u{1F610}', '\u{1F642}', '\u{1F60A}', '\u{1F92
 const energyEmojis = ['\u{1FAAB}', '\u{1F50B}', '\u{1F50B}', '\u26A1', '\u26A1'];
 
 let dailyState = JSON.parse(localStorage.getItem('dailyState')) || {};
+let scoreHistory = JSON.parse(localStorage.getItem('scoreHistory')) || {};
 
 function getTodayState() {
     const today = getTodayString();
@@ -428,8 +433,15 @@ function getOverallScore() {
     return { overall: overall, routinePercent: routinePercent, habitPercent: habitPercent, goalPercent: goalPercent };
 }
 
+function logTodayScore(overall) {
+    const today = getTodayString();
+    scoreHistory[today] = overall;
+    localStorage.setItem('scoreHistory', JSON.stringify(scoreHistory));
+}
+
 function renderOverview() {
     const result = getOverallScore();
+    logTodayScore(result.overall);
 
     overallScoreEl.textContent = result.overall + '%';
     routineScoreEl.textContent = result.routinePercent + '%';
@@ -456,6 +468,51 @@ energySlider.addEventListener('input', function () {
     localStorage.setItem('dailyState', JSON.stringify(dailyState));
     energyValueEl.textContent = energyEmojis[state.energy - 1];
 });
+
+function renderHistory() {
+    const bestDayEl = document.getElementById('best-day-value');
+    const averageEl = document.getElementById('average-value');
+    const trackedDaysEl = document.getElementById('tracked-days-value');
+    const historyList = document.getElementById('history-list');
+
+    const dates = Object.keys(scoreHistory).sort().reverse();
+
+    if (dates.length === 0) {
+        bestDayEl.textContent = '--';
+        averageEl.textContent = '--';
+        trackedDaysEl.textContent = '0';
+        historyList.innerHTML = '<p class="empty">No history yet. Visit Home to log today.</p>';
+        return;
+    }
+
+    let bestDate = dates[0];
+    let total = 0;
+
+    dates.forEach(function (date) {
+        if (scoreHistory[date] > scoreHistory[bestDate]) {
+            bestDate = date;
+        }
+        total += scoreHistory[date];
+    });
+
+    const average = Math.round(total / dates.length);
+
+    bestDayEl.textContent = scoreHistory[bestDate] + '%';
+    averageEl.textContent = average + '%';
+    trackedDaysEl.textContent = dates.length;
+
+    historyList.innerHTML = '';
+
+    dates.forEach(function (date) {
+        const row = document.createElement('div');
+        row.className = 'history-row';
+        row.innerHTML = `
+            <span class="history-date">${date}</span>
+            <span class="history-score">${scoreHistory[date]}%</span>
+        `;
+        historyList.appendChild(row);
+    });
+}
 
 renderRoutine();
 renderGoals();
