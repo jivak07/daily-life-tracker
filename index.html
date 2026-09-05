@@ -30,6 +30,10 @@
         <span class="tab-icon">⏱️</span>
         <span class="tab-label">Timer</span>
       </button>
+      <button class="tab-btn" data-tab="overview">
+        <span class="tab-icon">🏠</span>
+        <span class="tab-label">Home</span>
+      </button>
     </nav>
 
     <main class="tab-content">
@@ -101,6 +105,46 @@
           <div class="timer-settings">
             <label>Focus <input type="number" id="focus-minutes" min="1" value="25"></label>
             <label>Break <input type="number" id="break-minutes" min="1" value="5"></label>
+          </div>
+        </div>
+      </section>
+
+      <section id="overview" class="tab-panel">
+        <div class="tab-header">
+          <div class="tab-title">Home</div>
+          <div class="tab-subtitle" id="overview-subtitle">Today's snapshot</div>
+        </div>
+
+        <div class="score-card">
+          <div class="score-label">Overall</div>
+          <div class="score-value" id="overall-score"></div>
+        </div>
+
+        <div class="mini-scores">
+          <div class="mini-score">
+            <div class="mini-score-label">Routine</div>
+            <div class="mini-score-value" id="routine-score"></div>
+          </div>
+          <div class="mini-score">
+            <div class="mini-score-label">Habits</div>
+            <div class="mini-score-value" id="habit-score"></div>
+          </div>
+          <div class="mini-score">
+            <div class="mini-score-label">Goals</div>
+            <div class="mini-score-value" id="goal-score"></div>
+          </div>
+        </div>
+
+        <div class="slider-box">
+          <div class="slider-row">
+            <span class="slider-label">Mood</span>
+            <input type="range" id="mood-slider" min="1" max="5" value="3">
+            <span class="slider-emoji" id="mood-value"></span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-label">Energy</span>
+            <input type="range" id="energy-slider" min="1" max="5" value="3">
+            <span class="slider-emoji" id="energy-value"></span>
           </div>
         </div>
       </section>
