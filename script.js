@@ -24,6 +24,10 @@ tabButtons.forEach(function (button) {
 
         button.classList.add('active');
         document.getElementById(targetTab).classList.add('active');
+
+        if (targetTab === 'overview') {
+            renderOverview();
+        }
     });
 });
 
@@ -368,6 +372,89 @@ timerResetBtn.addEventListener('click', function () {
     timerMode = 'focus';
     timerSecondsLeft = getMinutesValue(focusMinutesInput, 25) * 60;
     updateTimerDisplay();
+});
+
+const overallScoreEl = document.getElementById('overall-score');
+const routineScoreEl = document.getElementById('routine-score');
+const habitScoreEl = document.getElementById('habit-score');
+const goalScoreEl = document.getElementById('goal-score');
+const moodSlider = document.getElementById('mood-slider');
+const energySlider = document.getElementById('energy-slider');
+const moodValueEl = document.getElementById('mood-value');
+const energyValueEl = document.getElementById('energy-value');
+
+const moodEmojis = ['\u{1F61E}', '\u{1F610}', '\u{1F642}', '\u{1F60A}', '\u{1F929}'];
+const energyEmojis = ['\u{1FAAB}', '\u{1F50B}', '\u{1F50B}', '\u26A1', '\u26A1'];
+
+let dailyState = JSON.parse(localStorage.getItem('dailyState')) || {};
+
+function getTodayState() {
+    const today = getTodayString();
+    if (!dailyState[today]) {
+        dailyState[today] = { mood: 3, energy: 3 };
+    }
+    return dailyState[today];
+}
+
+function getOverallScore() {
+    const today = getTodayString();
+    const scores = [];
+
+    let routinePercent = 0;
+    if (tasks.length > 0) {
+        const doneToday = tasks.filter(function (t) { return t.completedDates.indexOf(today) !== -1; }).length;
+        routinePercent = Math.round((doneToday / tasks.length) * 100);
+        scores.push(routinePercent);
+    }
+
+    let habitPercent = 0;
+    if (habits.length > 0) {
+        const doneToday = habits.filter(function (h) { return h.completedDates.indexOf(today) !== -1; }).length;
+        habitPercent = Math.round((doneToday / habits.length) * 100);
+        scores.push(habitPercent);
+    }
+
+    let goalPercent = 0;
+    if (goals.length > 0) {
+        const total = goals.reduce(function (sum, g) {
+            return sum + Math.min(100, Math.round((g.current / g.target) * 100));
+        }, 0);
+        goalPercent = Math.round(total / goals.length);
+        scores.push(goalPercent);
+    }
+
+    const overall = scores.length > 0 ? Math.round(scores.reduce(function (a, b) { return a + b; }, 0) / scores.length) : 0;
+
+    return { overall: overall, routinePercent: routinePercent, habitPercent: habitPercent, goalPercent: goalPercent };
+}
+
+function renderOverview() {
+    const result = getOverallScore();
+
+    overallScoreEl.textContent = result.overall + '%';
+    routineScoreEl.textContent = result.routinePercent + '%';
+    habitScoreEl.textContent = result.habitPercent + '%';
+    goalScoreEl.textContent = result.goalPercent + '%';
+
+    const state = getTodayState();
+    moodSlider.value = state.mood;
+    energySlider.value = state.energy;
+    moodValueEl.textContent = moodEmojis[state.mood - 1];
+    energyValueEl.textContent = energyEmojis[state.energy - 1];
+}
+
+moodSlider.addEventListener('input', function () {
+    const state = getTodayState();
+    state.mood = Number(moodSlider.value);
+    localStorage.setItem('dailyState', JSON.stringify(dailyState));
+    moodValueEl.textContent = moodEmojis[state.mood - 1];
+});
+
+energySlider.addEventListener('input', function () {
+    const state = getTodayState();
+    state.energy = Number(energySlider.value);
+    localStorage.setItem('dailyState', JSON.stringify(dailyState));
+    energyValueEl.textContent = energyEmojis[state.energy - 1];
 });
 
 renderRoutine();
