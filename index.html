@@ -34,6 +34,10 @@
         <span class="tab-icon">🏠</span>
         <span class="tab-label">Home</span>
       </button>
+      <button class="tab-btn" data-tab="history">
+        <span class="tab-icon">📜</span>
+        <span class="tab-label">History</span>
+      </button>
     </nav>
 
     <main class="tab-content">
@@ -147,6 +151,30 @@
             <span class="slider-emoji" id="energy-value"></span>
           </div>
         </div>
+      </section>
+
+      <section id="history" class="tab-panel">
+        <div class="tab-header">
+          <div class="tab-title">History</div>
+          <div class="tab-subtitle">Your tracked days</div>
+        </div>
+
+        <div class="history-stats">
+          <div class="history-stat">
+            <div class="history-stat-label">Best Day</div>
+            <div class="history-stat-value" id="best-day-value"></div>
+          </div>
+          <div class="history-stat">
+            <div class="history-stat-label">Average</div>
+            <div class="history-stat-value" id="average-value"></div>
+          </div>
+          <div class="history-stat">
+            <div class="history-stat-label">Days Tracked</div>
+            <div class="history-stat-value" id="tracked-days-value"></div>
+          </div>
+        </div>
+
+        <div id="history-list"></div>
       </section>
     </main>
   </div>
