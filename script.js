@@ -32,6 +32,10 @@ tabButtons.forEach(function (button) {
         if (targetTab === 'history') {
             renderHistory();
         }
+
+        if (targetTab === 'journey') {
+            renderJourney();
+        }
     });
 });
 
@@ -513,6 +517,99 @@ function renderHistory() {
         historyList.appendChild(row);
     });
 }
+
+function renderJourney() {
+    const journeyChart = document.getElementById('journey-chart');
+    journeyChart.innerHTML = '';
+
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        const label = d.toLocaleDateString('en', { weekday: 'short' });
+        const score = scoreHistory[dateStr] || 0;
+
+        const bar = document.createElement('div');
+        bar.className = 'journey-bar';
+        bar.innerHTML = `
+            <div class="journey-bar-track">
+                <div class="journey-bar-fill" style="height: ${score}%"></div>
+            </div>
+            <div class="journey-bar-value">${score}%</div>
+            <div class="journey-bar-label">${label}</div>
+        `;
+        journeyChart.appendChild(bar);
+    }
+}
+
+const exportBtn = document.getElementById('export-btn');
+const importInput = document.getElementById('import-input');
+
+exportBtn.addEventListener('click', function () {
+    const data = {
+        userName: userName,
+        tasks: tasks,
+        goals: goals,
+        habits: habits,
+        sessionLog: sessionLog,
+        dailyState: dailyState,
+        scoreHistory: scoreHistory
+    };
+
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'daily-life-tracker-backup.json';
+    link.click();
+
+    URL.revokeObjectURL(url);
+});
+
+importInput.addEventListener('change', function () {
+    const file = importInput.files[0];
+    if (!file) {
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function () {
+        try {
+            const data = JSON.parse(reader.result);
+
+            userName = data.userName || userName;
+            tasks = data.tasks || [];
+            goals = data.goals || [];
+            habits = data.habits || [];
+            sessionLog = data.sessionLog || {};
+            dailyState = data.dailyState || {};
+            scoreHistory = data.scoreHistory || {};
+
+            localStorage.setItem('userName', userName);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            localStorage.setItem('goals', JSON.stringify(goals));
+            localStorage.setItem('habits', JSON.stringify(habits));
+            localStorage.setItem('sessionLog', JSON.stringify(sessionLog));
+            localStorage.setItem('dailyState', JSON.stringify(dailyState));
+            localStorage.setItem('scoreHistory', JSON.stringify(scoreHistory));
+
+            document.getElementById('greeting').textContent = '\u{1F464} ' + userName + ' \u00b7 ' + getFormattedDate();
+            renderRoutine();
+            renderGoals();
+            renderHabits();
+
+            alert('Data imported successfully.');
+        } catch (error) {
+            alert('That file could not be read. Make sure it is a valid backup file.');
+        }
+    };
+
+    reader.readAsText(file);
+    importInput.value = '';
+});
 
 renderRoutine();
 renderGoals();
