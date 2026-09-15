@@ -38,6 +38,14 @@
         <span class="tab-icon">📜</span>
         <span class="tab-label">History</span>
       </button>
+      <button class="tab-btn" data-tab="journey">
+        <span class="tab-icon">📈</span>
+        <span class="tab-label">Journey</span>
+      </button>
+      <button class="tab-btn" data-tab="logic">
+        <span class="tab-icon">📊</span>
+        <span class="tab-label">Logic</span>
+      </button>
     </nav>
 
     <main class="tab-content">
@@ -175,6 +183,45 @@
         </div>
 
         <div id="history-list"></div>
+      </section>
+
+      <section id="journey" class="tab-panel">
+        <div class="tab-header">
+          <div class="tab-title">Journey</div>
+          <div class="tab-subtitle">Last 7 days</div>
+        </div>
+
+        <div class="journey-chart" id="journey-chart"></div>
+      </section>
+
+      <section id="logic" class="tab-panel">
+        <div class="tab-header">
+          <div class="tab-title">How It Works</div>
+        </div>
+
+        <div class="logic-card">
+          <p>Your Home tab averages three numbers: how much of today's Routine is checked off, how many Habits you completed today, and how close your Goals are to their targets. If you haven't added anything to one of these yet, it's left out of the average instead of counting as a zero.</p>
+        </div>
+
+        <div class="logic-card">
+          <p>Streaks count backward from today, one day at a time. The moment a day is missed, the streak resets to zero and starts building again from your next completed day.</p>
+        </div>
+
+        <div class="logic-card">
+          <p>None of this data leaves your browser. It's stored in localStorage, which is why it's still here after you close the tab, but it only exists on this device unless you export it below.</p>
+        </div>
+
+        <div class="tab-header">
+          <div class="tab-title">Backup</div>
+        </div>
+
+        <div class="backup-box">
+          <button id="export-btn">Export Data</button>
+          <label class="import-label">
+            Import Data
+            <input type="file" id="import-input" accept=".json">
+          </label>
+        </div>
       </section>
     </main>
   </div>
