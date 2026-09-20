@@ -10,6 +10,12 @@ function getFormattedDate() {
     return now.toLocaleDateString('en', options);
 }
 
+function getShortDate() {
+    const now = new Date();
+    const options = { weekday: 'long', month: 'short', day: 'numeric' };
+    return now.toLocaleDateString('en', options);
+}
+
 document.getElementById('greeting').textContent = '\u{1F464} ' + userName + ' \u00b7 ' + getFormattedDate();
 
 const tabButtons = document.querySelectorAll('.tab-btn');
@@ -48,11 +54,13 @@ const taskForm = document.getElementById('task-form');
 const taskIconInput = document.getElementById('task-icon');
 const taskNameInput = document.getElementById('task-name');
 const taskTimeInput = document.getElementById('task-time');
+const taskSubmitBtn = document.getElementById('task-submit-btn');
 const routineSubtitle = document.getElementById('routine-subtitle');
 const routineProgressFill = document.getElementById('routine-progress-fill');
 const taskList = document.getElementById('task-list');
 
 let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+let editingTaskId = null;
 
 function renderRoutine() {
     taskList.innerHTML = '';
@@ -61,30 +69,32 @@ function renderRoutine() {
     const doneToday = tasks.filter(function (t) { return t.completedDates.indexOf(today) !== -1; }).length;
     const percent = tasks.length > 0 ? Math.round((doneToday / tasks.length) * 100) : 0;
 
-    routineSubtitle.textContent = doneToday + '/' + tasks.length + ' done today';
+    routineSubtitle.textContent = doneToday + '/' + tasks.length + ' done \u00b7 ' + getShortDate();
     routineProgressFill.style.width = percent + '%';
 
     if (tasks.length === 0) {
         taskList.innerHTML = '<p class="empty">No tasks yet. Add one above.</p>';
-        return;
+    } else {
+        tasks.forEach(function (task) {
+            const isDone = task.completedDates.indexOf(today) !== -1;
+
+            const taskDiv = document.createElement('div');
+            taskDiv.className = 'task-item' + (isDone ? ' done' : '');
+            taskDiv.innerHTML = `
+                <button class="check-btn" onclick="toggleTask(${task.id})">${isDone ? '\u2713' : ''}</button>
+                <div class="task-icon">${task.icon}</div>
+                <div class="task-info">
+                    <div class="task-name">${task.name}</div>
+                    <div class="task-time">${task.time}</div>
+                </div>
+                <button class="icon-btn" onclick="editTask(${task.id})">\u270f\ufe0f</button>
+                <button class="icon-btn" onclick="deleteTask(${task.id})">\u{1F5D1}\ufe0f</button>
+            `;
+            taskList.appendChild(taskDiv);
+        });
     }
 
-    tasks.forEach(function (task) {
-        const isDone = task.completedDates.indexOf(today) !== -1;
-
-        const taskDiv = document.createElement('div');
-        taskDiv.className = 'task-item' + (isDone ? ' done' : '');
-        taskDiv.innerHTML = `
-            <button class="check-btn" onclick="toggleTask(${task.id})">${isDone ? '\u2713' : ''}</button>
-            <div class="task-icon">${task.icon}</div>
-            <div class="task-info">
-                <div class="task-name">${task.name}</div>
-                <div class="task-time">${task.time}</div>
-            </div>
-            <button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button>
-        `;
-        taskList.appendChild(taskDiv);
-    });
+    updateHeaderScore();
 }
 
 function toggleTask(id) {
@@ -102,24 +112,54 @@ function toggleTask(id) {
     renderRoutine();
 }
 
+function editTask(id) {
+    const task = tasks.find(function (t) { return t.id === id; });
+    taskIconInput.value = task.icon;
+    taskNameInput.value = task.name;
+    taskTimeInput.value = task.time;
+    editingTaskId = id;
+    taskSubmitBtn.textContent = 'Save';
+    taskNameInput.focus();
+}
+
 function deleteTask(id) {
+    const confirmed = confirm('Delete this task? This cannot be undone.');
+    if (!confirmed) {
+        return;
+    }
+
     tasks = tasks.filter(function (t) { return t.id !== id; });
     localStorage.setItem('tasks', JSON.stringify(tasks));
+
+    if (editingTaskId === id) {
+        editingTaskId = null;
+        taskSubmitBtn.textContent = 'Add';
+        taskForm.reset();
+    }
+
     renderRoutine();
 }
 
 taskForm.addEventListener('submit', function (e) {
     e.preventDefault();
 
-    const newTask = {
-        id: Date.now(),
-        icon: taskIconInput.value.trim() || '\u2022',
-        name: taskNameInput.value,
-        time: taskTimeInput.value,
-        completedDates: []
-    };
+    if (editingTaskId !== null) {
+        const task = tasks.find(function (t) { return t.id === editingTaskId; });
+        task.icon = taskIconInput.value.trim() || '\u2022';
+        task.name = taskNameInput.value;
+        task.time = taskTimeInput.value;
+        editingTaskId = null;
+        taskSubmitBtn.textContent = 'Add';
+    } else {
+        tasks.push({
+            id: Date.now(),
+            icon: taskIconInput.value.trim() || '\u2022',
+            name: taskNameInput.value,
+            time: taskTimeInput.value,
+            completedDates: []
+        });
+    }
 
-    tasks.push(newTask);
     localStorage.setItem('tasks', JSON.stringify(tasks));
 
     renderRoutine();
@@ -131,21 +171,28 @@ const goalIconInput = document.getElementById('goal-icon');
 const goalNameInput = document.getElementById('goal-name');
 const goalTargetInput = document.getElementById('goal-target');
 const goalUnitInput = document.getElementById('goal-unit');
+const goalSubmitBtn = document.getElementById('goal-submit-btn');
 const goalsSubtitle = document.getElementById('goals-subtitle');
 const goalList = document.getElementById('goal-list');
 
 let goals = JSON.parse(localStorage.getItem('goals')) || [];
+let editingGoalId = null;
 
 function renderGoals() {
     goalList.innerHTML = '';
 
-    const completed = goals.filter(function (g) { return g.current >= g.target; }).length;
-    goalsSubtitle.textContent = completed + '/' + goals.length + ' completed';
-
     if (goals.length === 0) {
+        goalsSubtitle.textContent = 'Average: 0% complete';
         goalList.innerHTML = '<p class="empty">No goals yet. Add one above.</p>';
+        updateHeaderScore();
         return;
     }
+
+    const totalPercent = goals.reduce(function (sum, g) {
+        return sum + Math.min(100, Math.round((g.current / g.target) * 100));
+    }, 0);
+    const averagePercent = Math.round(totalPercent / goals.length);
+    goalsSubtitle.textContent = 'Average: ' + averagePercent + '% complete';
 
     goals.forEach(function (goal) {
         const percent = Math.min(100, Math.round((goal.current / goal.target) * 100));
@@ -158,20 +205,28 @@ function renderGoals() {
                 <div class="goal-icon">${goal.icon}</div>
                 <div class="goal-info">
                     <div class="goal-name">${goal.name}</div>
-                    <div class="goal-progress-text">${goal.current} / ${goal.target} ${goal.unit}</div>
+                    <div class="goal-target-text">Target: ${goal.target}</div>
                 </div>
-                <button class="delete-btn" onclick="deleteGoal(${goal.id})">Delete</button>
+                <button class="icon-btn" onclick="editGoal(${goal.id})">\u270f\ufe0f</button>
+                <button class="icon-btn" onclick="deleteGoal(${goal.id})">\u{1F5D1}\ufe0f</button>
             </div>
             <div class="goal-progress-bar">
                 <div class="goal-progress-fill" style="width: ${percent}%"></div>
             </div>
-            <div class="goal-controls">
-                <button onclick="adjustGoal(${goal.id}, -1)">-</button>
-                <button onclick="adjustGoal(${goal.id}, 1)">+</button>
+            <div class="goal-bottom">
+                <div class="goal-progress-text">${goal.current}/${goal.target} ${goal.unit} (${percent}%)</div>
+                <div class="goal-controls">
+                    <button onclick="adjustGoal(${goal.id}, -1)">-1</button>
+                    <button onclick="adjustGoal(${goal.id}, 1)">+1</button>
+                    <button onclick="adjustGoal(${goal.id}, 5)">+5</button>
+                    <button onclick="adjustGoal(${goal.id}, 10)">+10</button>
+                </div>
             </div>
         `;
         goalList.appendChild(goalDiv);
     });
+
+    updateHeaderScore();
 }
 
 function adjustGoal(id, amount) {
@@ -181,25 +236,57 @@ function adjustGoal(id, amount) {
     renderGoals();
 }
 
+function editGoal(id) {
+    const goal = goals.find(function (g) { return g.id === id; });
+    goalIconInput.value = goal.icon;
+    goalNameInput.value = goal.name;
+    goalTargetInput.value = goal.target;
+    goalUnitInput.value = goal.unit;
+    editingGoalId = id;
+    goalSubmitBtn.textContent = 'Save';
+    goalNameInput.focus();
+}
+
 function deleteGoal(id) {
+    const confirmed = confirm('Delete this goal? This cannot be undone.');
+    if (!confirmed) {
+        return;
+    }
+
     goals = goals.filter(function (g) { return g.id !== id; });
     localStorage.setItem('goals', JSON.stringify(goals));
+
+    if (editingGoalId === id) {
+        editingGoalId = null;
+        goalSubmitBtn.textContent = 'Add';
+        goalForm.reset();
+    }
+
     renderGoals();
 }
 
 goalForm.addEventListener('submit', function (e) {
     e.preventDefault();
 
-    const newGoal = {
-        id: Date.now(),
-        icon: goalIconInput.value.trim() || '\u2022',
-        name: goalNameInput.value,
-        target: Number(goalTargetInput.value),
-        unit: goalUnitInput.value,
-        current: 0
-    };
+    if (editingGoalId !== null) {
+        const goal = goals.find(function (g) { return g.id === editingGoalId; });
+        goal.icon = goalIconInput.value.trim() || '\u2022';
+        goal.name = goalNameInput.value;
+        goal.target = Number(goalTargetInput.value);
+        goal.unit = goalUnitInput.value;
+        editingGoalId = null;
+        goalSubmitBtn.textContent = 'Add';
+    } else {
+        goals.push({
+            id: Date.now(),
+            icon: goalIconInput.value.trim() || '\u2022',
+            name: goalNameInput.value,
+            target: Number(goalTargetInput.value),
+            unit: goalUnitInput.value,
+            current: 0
+        });
+    }
 
-    goals.push(newGoal);
     localStorage.setItem('goals', JSON.stringify(goals));
 
     renderGoals();
@@ -209,10 +296,12 @@ goalForm.addEventListener('submit', function (e) {
 const habitForm = document.getElementById('habit-form');
 const habitIconInput = document.getElementById('habit-icon');
 const habitNameInput = document.getElementById('habit-name');
+const habitSubmitBtn = document.getElementById('habit-submit-btn');
 const habitsSubtitle = document.getElementById('habits-subtitle');
 const habitList = document.getElementById('habit-list');
 
 let habits = JSON.parse(localStorage.getItem('habits')) || [];
+let editingHabitId = null;
 
 function calculateStreak(habit) {
     const today = new Date();
@@ -243,26 +332,29 @@ function renderHabits() {
 
     if (habits.length === 0) {
         habitList.innerHTML = '<p class="empty">No habits yet. Add one above.</p>';
-        return;
+    } else {
+        habits.forEach(function (habit) {
+            const isDone = habit.completedDates.indexOf(today) !== -1;
+            const streak = calculateStreak(habit);
+            const streakText = streak > 0 ? '\u{1F525} ' + streak + ' day streak!' : 'No streak yet';
+
+            const habitDiv = document.createElement('div');
+            habitDiv.className = 'habit-item' + (isDone ? ' done' : '');
+            habitDiv.innerHTML = `
+                <button class="habit-check-btn" onclick="toggleHabit(${habit.id})">${isDone ? '\u2713' : ''}</button>
+                <div class="habit-icon">${habit.icon}</div>
+                <div class="habit-info">
+                    <div class="habit-name">${habit.name}</div>
+                    <div class="habit-streak">${streakText}</div>
+                </div>
+                <button class="icon-btn" onclick="editHabit(${habit.id})">\u270f\ufe0f</button>
+                <button class="icon-btn" onclick="deleteHabit(${habit.id})">\u{1F5D1}\ufe0f</button>
+            `;
+            habitList.appendChild(habitDiv);
+        });
     }
 
-    habits.forEach(function (habit) {
-        const isDone = habit.completedDates.indexOf(today) !== -1;
-        const streak = calculateStreak(habit);
-
-        const habitDiv = document.createElement('div');
-        habitDiv.className = 'habit-item' + (isDone ? ' done' : '');
-        habitDiv.innerHTML = `
-            <button class="habit-check-btn" onclick="toggleHabit(${habit.id})">${isDone ? '\u2713' : ''}</button>
-            <div class="habit-icon">${habit.icon}</div>
-            <div class="habit-info">
-                <div class="habit-name">${habit.name}</div>
-                <div class="habit-streak">${streak} day streak</div>
-            </div>
-            <button class="delete-btn" onclick="deleteHabit(${habit.id})">Delete</button>
-        `;
-        habitList.appendChild(habitDiv);
-    });
+    updateHeaderScore();
 }
 
 function toggleHabit(id) {
@@ -280,23 +372,51 @@ function toggleHabit(id) {
     renderHabits();
 }
 
+function editHabit(id) {
+    const habit = habits.find(function (h) { return h.id === id; });
+    habitIconInput.value = habit.icon;
+    habitNameInput.value = habit.name;
+    editingHabitId = id;
+    habitSubmitBtn.textContent = 'Save';
+    habitNameInput.focus();
+}
+
 function deleteHabit(id) {
+    const confirmed = confirm('Delete this habit? This cannot be undone.');
+    if (!confirmed) {
+        return;
+    }
+
     habits = habits.filter(function (h) { return h.id !== id; });
     localStorage.setItem('habits', JSON.stringify(habits));
+
+    if (editingHabitId === id) {
+        editingHabitId = null;
+        habitSubmitBtn.textContent = 'Add';
+        habitForm.reset();
+    }
+
     renderHabits();
 }
 
 habitForm.addEventListener('submit', function (e) {
     e.preventDefault();
 
-    const newHabit = {
-        id: Date.now(),
-        icon: habitIconInput.value.trim() || '\u2022',
-        name: habitNameInput.value,
-        completedDates: []
-    };
+    if (editingHabitId !== null) {
+        const habit = habits.find(function (h) { return h.id === editingHabitId; });
+        habit.icon = habitIconInput.value.trim() || '\u2022';
+        habit.name = habitNameInput.value;
+        editingHabitId = null;
+        habitSubmitBtn.textContent = 'Add';
+    } else {
+        habits.push({
+            id: Date.now(),
+            icon: habitIconInput.value.trim() || '\u2022',
+            name: habitNameInput.value,
+            completedDates: []
+        });
+    }
 
-    habits.push(newHabit);
     localStorage.setItem('habits', JSON.stringify(habits));
 
     renderHabits();
@@ -382,17 +502,18 @@ timerResetBtn.addEventListener('click', function () {
     updateTimerDisplay();
 });
 
-const overallScoreEl = document.getElementById('overall-score');
+const headerScoreEl = document.getElementById('header-score');
+const headerTimeEl = document.getElementById('header-time');
+const powerValueEl = document.getElementById('power-value');
+const powerMessageEl = document.getElementById('power-message');
 const routineScoreEl = document.getElementById('routine-score');
 const habitScoreEl = document.getElementById('habit-score');
 const goalScoreEl = document.getElementById('goal-score');
 const moodSlider = document.getElementById('mood-slider');
 const energySlider = document.getElementById('energy-slider');
-const moodValueEl = document.getElementById('mood-value');
-const energyValueEl = document.getElementById('energy-value');
-
-const moodEmojis = ['\u{1F61E}', '\u{1F610}', '\u{1F642}', '\u{1F60A}', '\u{1F929}'];
-const energyEmojis = ['\u{1FAAB}', '\u{1F50B}', '\u{1F50B}', '\u26A1', '\u26A1'];
+const moodDisplayEl = document.getElementById('mood-display');
+const energyDisplayEl = document.getElementById('energy-display');
+const shareBtn = document.getElementById('share-btn');
 
 let dailyState = JSON.parse(localStorage.getItem('dailyState')) || {};
 let scoreHistory = JSON.parse(localStorage.getItem('scoreHistory')) || {};
@@ -400,7 +521,7 @@ let scoreHistory = JSON.parse(localStorage.getItem('scoreHistory')) || {};
 function getTodayState() {
     const today = getTodayString();
     if (!dailyState[today]) {
-        dailyState[today] = { mood: 3, energy: 3 };
+        dailyState[today] = { mood: 5, energy: 5 };
     }
     return dailyState[today];
 }
@@ -437,17 +558,93 @@ function getOverallScore() {
     return { overall: overall, routinePercent: routinePercent, habitPercent: habitPercent, goalPercent: goalPercent };
 }
 
+function getPowerMessage(score) {
+    if (score >= 76) {
+        return 'ABSOLUTE LEGEND! \u{1F3C6}';
+    }
+    if (score >= 51) {
+        return 'ON FIRE TODAY \u{1F525}';
+    }
+    if (score >= 26) {
+        return 'KEEP PUSHING!';
+    }
+    return 'LET\u2019S GOOO, START NOW!';
+}
+
+function getScoreColorClass(score) {
+    if (score >= 76) {
+        return 'score-green';
+    }
+    if (score >= 51) {
+        return 'score-cyan';
+    }
+    if (score >= 26) {
+        return 'score-amber';
+    }
+    return 'score-red';
+}
+
+function updateHeaderScore() {
+    const result = getOverallScore();
+    const colorClass = getScoreColorClass(result.overall);
+
+    headerScoreEl.textContent = result.overall + '%';
+    headerScoreEl.className = 'header-score ' + colorClass;
+    headerTimeEl.textContent = new Date().toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
+
+    logTodayScore(result.overall);
+}
+
 function logTodayScore(overall) {
     const today = getTodayString();
     scoreHistory[today] = overall;
     localStorage.setItem('scoreHistory', JSON.stringify(scoreHistory));
 }
 
+function getUrgentNudge() {
+    const today = getTodayString();
+    const notDoneToday = habits.filter(function (h) { return h.completedDates.indexOf(today) === -1; });
+
+    if (notDoneToday.length === 0) {
+        return null;
+    }
+
+    let weakest = notDoneToday[0];
+    notDoneToday.forEach(function (h) {
+        if (calculateStreak(h) < calculateStreak(weakest)) {
+            weakest = h;
+        }
+    });
+
+    return weakest;
+}
+
+function renderUrgentCard() {
+    const container = document.getElementById('urgent-card-container');
+    const nudge = getUrgentNudge();
+
+    if (!nudge) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="urgent-card">
+            <div class="urgent-badge">Not Done Yet</div>
+            <div class="urgent-text">${nudge.icon} <strong>${nudge.name}</strong> is still pending today.</div>
+            <div class="urgent-fix">Fix: Do a 2 minute version right now. That still counts.</div>
+        </div>
+    `;
+}
+
 function renderOverview() {
     const result = getOverallScore();
-    logTodayScore(result.overall);
+    const colorClass = getScoreColorClass(result.overall);
 
-    overallScoreEl.textContent = result.overall + '%';
+    powerValueEl.textContent = result.overall + '%';
+    powerValueEl.className = 'power-value ' + colorClass;
+    powerMessageEl.textContent = getPowerMessage(result.overall);
+
     routineScoreEl.textContent = result.routinePercent + '%';
     habitScoreEl.textContent = result.habitPercent + '%';
     goalScoreEl.textContent = result.goalPercent + '%';
@@ -455,22 +652,38 @@ function renderOverview() {
     const state = getTodayState();
     moodSlider.value = state.mood;
     energySlider.value = state.energy;
-    moodValueEl.textContent = moodEmojis[state.mood - 1];
-    energyValueEl.textContent = energyEmojis[state.energy - 1];
+    moodDisplayEl.textContent = state.mood;
+    energyDisplayEl.textContent = state.energy;
+
+    renderUrgentCard();
+    updateHeaderScore();
 }
 
 moodSlider.addEventListener('input', function () {
     const state = getTodayState();
     state.mood = Number(moodSlider.value);
     localStorage.setItem('dailyState', JSON.stringify(dailyState));
-    moodValueEl.textContent = moodEmojis[state.mood - 1];
+    moodDisplayEl.textContent = state.mood;
 });
 
 energySlider.addEventListener('input', function () {
     const state = getTodayState();
     state.energy = Number(energySlider.value);
     localStorage.setItem('dailyState', JSON.stringify(dailyState));
-    energyValueEl.textContent = energyEmojis[state.energy - 1];
+    energyDisplayEl.textContent = state.energy;
+});
+
+shareBtn.addEventListener('click', function () {
+    const result = getOverallScore();
+    const summary = 'My Daily Life Tracker report \u2014 ' + getShortDate() + '\nOverall: ' + result.overall + '%\nRoutine: ' + result.routinePercent + '%\nHabits: ' + result.habitPercent + '%\nGoals: ' + result.goalPercent + '%';
+
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(summary).then(function () {
+            alert('Copied to clipboard. Paste it wherever you want to share it.');
+        });
+    } else {
+        alert(summary);
+    }
 });
 
 function renderHistory() {
@@ -518,15 +731,29 @@ function renderHistory() {
     });
 }
 
+let journeyDays = 7;
+
+const journeyToggleBtns = document.querySelectorAll('.journey-toggle-btn');
+
+journeyToggleBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        journeyToggleBtns.forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        journeyDays = Number(btn.getAttribute('data-days'));
+        renderJourney();
+    });
+});
+
 function renderJourney() {
     const journeyChart = document.getElementById('journey-chart');
     journeyChart.innerHTML = '';
+    journeyChart.classList.toggle('journey-chart-dense', journeyDays > 7);
 
-    for (let i = 6; i >= 0; i--) {
+    for (let i = journeyDays - 1; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
         const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-        const label = d.toLocaleDateString('en', { weekday: 'short' });
+        const label = journeyDays === 7 ? d.toLocaleDateString('en', { weekday: 'short' }) : d.getDate();
         const score = scoreHistory[dateStr] || 0;
 
         const bar = document.createElement('div');
@@ -535,7 +762,7 @@ function renderJourney() {
             <div class="journey-bar-track">
                 <div class="journey-bar-fill" style="height: ${score}%"></div>
             </div>
-            <div class="journey-bar-value">${score}%</div>
+            ${journeyDays === 7 ? '<div class="journey-bar-value">' + score + '%</div>' : ''}
             <div class="journey-bar-label">${label}</div>
         `;
         journeyChart.appendChild(bar);
@@ -600,6 +827,7 @@ importInput.addEventListener('change', function () {
             renderRoutine();
             renderGoals();
             renderHabits();
+            renderOverview();
 
             alert('Data imported successfully.');
         } catch (error) {
@@ -615,3 +843,4 @@ renderRoutine();
 renderGoals();
 renderHabits();
 updateTimerDisplay();
+renderOverview();
