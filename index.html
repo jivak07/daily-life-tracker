@@ -9,12 +9,24 @@
 <body>
   <div class="app">
     <header class="app-header">
-      <h1>⚡ Daily Life Tracker</h1>
-      <p class="greeting" id="greeting"></p>
+      <div class="header-top">
+        <div>
+          <h1>⚡ Daily Life Tracker</h1>
+          <p class="greeting" id="greeting"></p>
+        </div>
+        <div class="header-right">
+          <div class="header-score" id="header-score">0%</div>
+          <div class="header-time" id="header-time"></div>
+        </div>
+      </div>
     </header>
 
     <nav class="tab-bar">
-      <button class="tab-btn active" data-tab="routine">
+      <button class="tab-btn active" data-tab="overview">
+        <span class="tab-icon">🏠</span>
+        <span class="tab-label">Home</span>
+      </button>
+      <button class="tab-btn" data-tab="routine">
         <span class="tab-icon">📅</span>
         <span class="tab-label">Routine</span>
       </button>
@@ -28,11 +40,7 @@
       </button>
       <button class="tab-btn" data-tab="timer">
         <span class="tab-icon">⏱️</span>
-        <span class="tab-label">Timer</span>
-      </button>
-      <button class="tab-btn" data-tab="overview">
-        <span class="tab-icon">🏠</span>
-        <span class="tab-label">Home</span>
+        <span class="tab-label">Pomodoro</span>
       </button>
       <button class="tab-btn" data-tab="history">
         <span class="tab-icon">📜</span>
@@ -49,7 +57,45 @@
     </nav>
 
     <main class="tab-content">
-      <section id="routine" class="tab-panel active">
+      <section id="overview" class="tab-panel active">
+        <div class="power-card">
+          <div class="power-label">Today's Power Level</div>
+          <div class="power-value" id="power-value">0%</div>
+          <div class="power-message" id="power-message"></div>
+        </div>
+
+        <div class="mini-scores">
+          <div class="mini-score">
+            <div class="mini-score-label">Routine</div>
+            <div class="mini-score-value" id="routine-score"></div>
+          </div>
+          <div class="mini-score">
+            <div class="mini-score-label">Habits</div>
+            <div class="mini-score-value" id="habit-score"></div>
+          </div>
+          <div class="mini-score">
+            <div class="mini-score-label">Goals</div>
+            <div class="mini-score-value" id="goal-score"></div>
+          </div>
+        </div>
+
+        <div class="slider-grid">
+          <div class="slider-col">
+            <div class="slider-header"><span>😊</span> Mood <strong id="mood-display">5</strong>/10</div>
+            <input type="range" id="mood-slider" min="1" max="10" value="5" class="mood-range">
+          </div>
+          <div class="slider-col">
+            <div class="slider-header"><span>⚡</span> Energy <strong id="energy-display">5</strong>/10</div>
+            <input type="range" id="energy-slider" min="1" max="10" value="5" class="energy-range">
+          </div>
+        </div>
+
+        <button class="share-btn" id="share-btn">🤝 Share Today's Report</button>
+
+        <div id="urgent-card-container"></div>
+      </section>
+
+      <section id="routine" class="tab-panel">
         <div class="tab-header">
           <div class="tab-title">Daily Routine</div>
           <div class="tab-subtitle" id="routine-subtitle"></div>
@@ -60,10 +106,10 @@
         </div>
 
         <form id="task-form">
-          <input type="text" id="task-icon" placeholder="Icon (e.g. 📖)" maxlength="2">
+          <input type="text" id="task-icon" placeholder="Add Icon for task (e.g. 📖)" maxlength="2">
           <input type="text" id="task-name" placeholder="Task name" required>
           <input type="text" id="task-time" placeholder="Time (e.g. 6:00 AM)">
-          <button type="submit">Add</button>
+          <button type="submit" id="task-submit-btn">Add</button>
         </form>
 
         <div id="task-list"></div>
@@ -71,16 +117,16 @@
 
       <section id="goals" class="tab-panel">
         <div class="tab-header">
-          <div class="tab-title">Goals</div>
+          <div class="tab-title">My Goals</div>
           <div class="tab-subtitle" id="goals-subtitle"></div>
         </div>
 
         <form id="goal-form">
-          <input type="text" id="goal-icon" placeholder="Icon (e.g. 📚)" maxlength="2">
+          <input type="text" id="goal-icon" placeholder="Add Icon for goal (e.g. 📚)" maxlength="2">
           <input type="text" id="goal-name" placeholder="Goal name" required>
           <input type="number" id="goal-target" placeholder="Target" min="1" required>
           <input type="text" id="goal-unit" placeholder="Unit (e.g. books)">
-          <button type="submit">Add</button>
+          <button type="submit" id="goal-submit-btn">Add</button>
         </form>
 
         <div id="goal-list"></div>
@@ -93,9 +139,9 @@
         </div>
 
         <form id="habit-form">
-          <input type="text" id="habit-icon" placeholder="Icon (e.g. 💧)" maxlength="2">
+          <input type="text" id="habit-icon" placeholder="Add Icon for habit (e.g. 💧)" maxlength="2">
           <input type="text" id="habit-name" placeholder="Habit name" required>
-          <button type="submit">Add</button>
+          <button type="submit" id="habit-submit-btn">Add</button>
         </form>
 
         <div id="habit-list"></div>
@@ -117,46 +163,6 @@
           <div class="timer-settings">
             <label>Focus <input type="number" id="focus-minutes" min="1" value="25"></label>
             <label>Break <input type="number" id="break-minutes" min="1" value="5"></label>
-          </div>
-        </div>
-      </section>
-
-      <section id="overview" class="tab-panel">
-        <div class="tab-header">
-          <div class="tab-title">Home</div>
-          <div class="tab-subtitle" id="overview-subtitle">Today's snapshot</div>
-        </div>
-
-        <div class="score-card">
-          <div class="score-label">Overall</div>
-          <div class="score-value" id="overall-score"></div>
-        </div>
-
-        <div class="mini-scores">
-          <div class="mini-score">
-            <div class="mini-score-label">Routine</div>
-            <div class="mini-score-value" id="routine-score"></div>
-          </div>
-          <div class="mini-score">
-            <div class="mini-score-label">Habits</div>
-            <div class="mini-score-value" id="habit-score"></div>
-          </div>
-          <div class="mini-score">
-            <div class="mini-score-label">Goals</div>
-            <div class="mini-score-value" id="goal-score"></div>
-          </div>
-        </div>
-
-        <div class="slider-box">
-          <div class="slider-row">
-            <span class="slider-label">Mood</span>
-            <input type="range" id="mood-slider" min="1" max="5" value="3">
-            <span class="slider-emoji" id="mood-value"></span>
-          </div>
-          <div class="slider-row">
-            <span class="slider-label">Energy</span>
-            <input type="range" id="energy-slider" min="1" max="5" value="3">
-            <span class="slider-emoji" id="energy-value"></span>
           </div>
         </div>
       </section>
@@ -188,7 +194,12 @@
       <section id="journey" class="tab-panel">
         <div class="tab-header">
           <div class="tab-title">Journey</div>
-          <div class="tab-subtitle">Last 7 days</div>
+          <div class="tab-subtitle">Your progress over time</div>
+        </div>
+
+        <div class="journey-toggle">
+          <button class="journey-toggle-btn active" data-days="7">7 Days</button>
+          <button class="journey-toggle-btn" data-days="30">30 Days</button>
         </div>
 
         <div class="journey-chart" id="journey-chart"></div>
@@ -200,19 +211,19 @@
         </div>
 
         <div class="logic-card">
-          <p>Your Home tab averages three numbers: how much of today's Routine is checked off, how many Habits you completed today, and how close your Goals are to their targets. If you haven't added anything to one of these yet, it's left out of the average instead of counting as a zero.</p>
+          <p>Home score = Routine done today + Habits done today + Goals progress, averaged. Haven't added something yet? It's skipped, not counted as 0. Keeps it fair.</p>
         </div>
 
         <div class="logic-card">
-          <p>Streaks count backward from today, one day at a time. The moment a day is missed, the streak resets to zero and starts building again from your next completed day.</p>
+          <p>Streak = days in a row you did a habit. Miss a day, it drops to 0. Start again next time you check it off.</p>
         </div>
 
         <div class="logic-card">
-          <p>None of this data leaves your browser. It's stored in localStorage, which is why it's still here after you close the tab, but it only exists on this device unless you export it below.</p>
+          <p>Everything stays on your device only. Nobody else can see it. Want a copy or moving phones? Use Export below.</p>
         </div>
 
         <div class="tab-header">
-          <div class="tab-title">Backup</div>
+          <div class="tab-title">Backup Data</div>
         </div>
 
         <div class="backup-box">
