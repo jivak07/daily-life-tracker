@@ -54,6 +54,7 @@ const taskForm = document.getElementById('task-form');
 const taskIconInput = document.getElementById('task-icon');
 const taskNameInput = document.getElementById('task-name');
 const taskTimeInput = document.getElementById('task-time');
+const taskCountProgressInput = document.getElementById('task-count-progress');
 const taskSubmitBtn = document.getElementById('task-submit-btn');
 const routineSubtitle = document.getElementById('routine-subtitle');
 const routineProgressFill = document.getElementById('routine-progress-fill');
@@ -77,6 +78,7 @@ function renderRoutine() {
     } else {
         tasks.forEach(function (task) {
             const isDone = task.completedDates.indexOf(today) !== -1;
+            const notCounted = task.countInProgress === false;
 
             const taskDiv = document.createElement('div');
             taskDiv.className = 'task-item' + (isDone ? ' done' : '');
@@ -85,7 +87,7 @@ function renderRoutine() {
                 <div class="task-icon">${task.icon}</div>
                 <div class="task-info">
                     <div class="task-name">${task.name}</div>
-                    <div class="task-time">${task.time}</div>
+                    <div class="task-time">${task.time}${notCounted ? ' <span class="not-counted-tag">not counted</span>' : ''}</div>
                 </div>
                 <button class="icon-btn" onclick="editTask(${task.id})">\u270f\ufe0f</button>
                 <button class="icon-btn" onclick="deleteTask(${task.id})">\u{1F5D1}\ufe0f</button>
@@ -117,6 +119,7 @@ function editTask(id) {
     taskIconInput.value = task.icon;
     taskNameInput.value = task.name;
     taskTimeInput.value = task.time;
+    taskCountProgressInput.checked = task.countInProgress !== false;
     editingTaskId = id;
     taskSubmitBtn.textContent = 'Save';
     taskNameInput.focus();
@@ -148,6 +151,7 @@ taskForm.addEventListener('submit', function (e) {
         task.icon = taskIconInput.value.trim() || '\u2022';
         task.name = taskNameInput.value;
         task.time = taskTimeInput.value;
+        task.countInProgress = taskCountProgressInput.checked;
         editingTaskId = null;
         taskSubmitBtn.textContent = 'Add';
     } else {
@@ -156,6 +160,7 @@ taskForm.addEventListener('submit', function (e) {
             icon: taskIconInput.value.trim() || '\u2022',
             name: taskNameInput.value,
             time: taskTimeInput.value,
+            countInProgress: taskCountProgressInput.checked,
             completedDates: []
         });
     }
@@ -171,6 +176,7 @@ const goalIconInput = document.getElementById('goal-icon');
 const goalNameInput = document.getElementById('goal-name');
 const goalTargetInput = document.getElementById('goal-target');
 const goalUnitInput = document.getElementById('goal-unit');
+const goalCountProgressInput = document.getElementById('goal-count-progress');
 const goalSubmitBtn = document.getElementById('goal-submit-btn');
 const goalsSubtitle = document.getElementById('goals-subtitle');
 const goalList = document.getElementById('goal-list');
@@ -178,25 +184,113 @@ const goalList = document.getElementById('goal-list');
 let goals = JSON.parse(localStorage.getItem('goals')) || [];
 let editingGoalId = null;
 
+goals.forEach(function (g) {
+    if (!g.type) {
+        g.type = g.resetsDaily ? 'daily_quota' : 'lifetime';
+    }
+    if (!g.dailyAdded) {
+        g.dailyAdded = {};
+    }
+    if (!g.dailyProgress) {
+        g.dailyProgress = {};
+    }
+    if (!g.completedDates) {
+        g.completedDates = [];
+    }
+    if (typeof g.current !== 'number') {
+        g.current = 0;
+    }
+});
+
+function getGoalType() {
+    const checked = document.querySelector('input[name="goal-type"]:checked');
+    return checked ? checked.value : 'lifetime';
+}
+
+function setGoalTypeRadio(type) {
+    const radio = document.querySelector('input[name="goal-type"][value="' + type + '"]');
+    if (radio) {
+        radio.checked = true;
+    }
+}
+
+function getGoalCurrentAmount(goal) {
+    if (goal.type === 'daily_checkoff') {
+        return goal.completedDates.length;
+    }
+    if (goal.type === 'daily_quota') {
+        const today = getTodayString();
+        return goal.dailyProgress[today] || 0;
+    }
+    return goal.current;
+}
+
+function getGoalPercent(goal) {
+    const amount = getGoalCurrentAmount(goal);
+    return Math.min(100, Math.round((amount / goal.target) * 100));
+}
+
+function getGoalTodayScore(goal) {
+    const today = getTodayString();
+
+    if (goal.type === 'daily_checkoff') {
+        return goal.completedDates.indexOf(today) !== -1 ? 100 : 0;
+    }
+
+    if (goal.type === 'daily_quota') {
+        return getGoalPercent(goal);
+    }
+
+    const addedToday = goal.dailyAdded[today] || 0;
+    return addedToday > 0 ? 100 : 0;
+}
+
 function renderGoals() {
     goalList.innerHTML = '';
 
+    const countedGoals = goals.filter(function (g) { return g.countInProgress !== false; });
+
     if (goals.length === 0) {
-        goalsSubtitle.textContent = 'Average: 0% complete';
+        goalsSubtitle.textContent = 'Average: 0% today';
+    } else if (countedGoals.length === 0) {
+        goalsSubtitle.textContent = 'No goals counted in progress';
+    } else {
+        const totalScore = countedGoals.reduce(function (sum, g) { return sum + getGoalTodayScore(g); }, 0);
+        goalsSubtitle.textContent = 'Average: ' + Math.round(totalScore / countedGoals.length) + '% today';
+    }
+
+    if (goals.length === 0) {
         goalList.innerHTML = '<p class="empty">No goals yet. Add one above.</p>';
         updateHeaderScore();
         return;
     }
 
-    const totalPercent = goals.reduce(function (sum, g) {
-        return sum + Math.min(100, Math.round((g.current / g.target) * 100));
-    }, 0);
-    const averagePercent = Math.round(totalPercent / goals.length);
-    goalsSubtitle.textContent = 'Average: ' + averagePercent + '% complete';
+    const today = getTodayString();
 
     goals.forEach(function (goal) {
-        const percent = Math.min(100, Math.round((goal.current / goal.target) * 100));
-        const isComplete = goal.current >= goal.target;
+        const amount = getGoalCurrentAmount(goal);
+        const percent = getGoalPercent(goal);
+        const isComplete = amount >= goal.target;
+        const notCounted = goal.countInProgress === false;
+
+        let typeLabel = 'lifetime total';
+        let progressLabel = amount + '/' + goal.target + ' ' + goal.unit + ' (' + percent + '%)';
+        let controlsHtml = `
+            <button onclick="adjustGoal(${goal.id}, -1)">-1</button>
+            <button onclick="adjustGoal(${goal.id}, 1)">+1</button>
+            <button onclick="adjustGoal(${goal.id}, 5)">+5</button>
+            <button onclick="adjustGoal(${goal.id}, 10)">+10</button>
+        `;
+
+        if (goal.type === 'daily_checkoff') {
+            typeLabel = 'daily check-off';
+            progressLabel = amount + '/' + goal.target + ' days (' + percent + '%)';
+            const doneToday = goal.completedDates.indexOf(today) !== -1;
+            controlsHtml = `<button class="goal-check-btn${doneToday ? ' checked' : ''}" onclick="toggleGoalDay(${goal.id})">${doneToday ? '\u2713 Done today' : 'Mark today done'}</button>`;
+        } else if (goal.type === 'daily_quota') {
+            typeLabel = 'daily quota';
+            progressLabel = amount + '/' + goal.target + ' ' + goal.unit + ' today (' + percent + '%)';
+        }
 
         const goalDiv = document.createElement('div');
         goalDiv.className = 'goal-item' + (isComplete ? ' done' : '');
@@ -205,7 +299,7 @@ function renderGoals() {
                 <div class="goal-icon">${goal.icon}</div>
                 <div class="goal-info">
                     <div class="goal-name">${goal.name}</div>
-                    <div class="goal-target-text">Target: ${goal.target}</div>
+                    <div class="goal-target-text">Target: ${goal.target} \u00b7 ${typeLabel}${notCounted ? ' <span class="not-counted-tag">not counted</span>' : ''}</div>
                 </div>
                 <button class="icon-btn" onclick="editGoal(${goal.id})">\u270f\ufe0f</button>
                 <button class="icon-btn" onclick="deleteGoal(${goal.id})">\u{1F5D1}\ufe0f</button>
@@ -214,13 +308,8 @@ function renderGoals() {
                 <div class="goal-progress-fill" style="width: ${percent}%"></div>
             </div>
             <div class="goal-bottom">
-                <div class="goal-progress-text">${goal.current}/${goal.target} ${goal.unit} (${percent}%)</div>
-                <div class="goal-controls">
-                    <button onclick="adjustGoal(${goal.id}, -1)">-1</button>
-                    <button onclick="adjustGoal(${goal.id}, 1)">+1</button>
-                    <button onclick="adjustGoal(${goal.id}, 5)">+5</button>
-                    <button onclick="adjustGoal(${goal.id}, 10)">+10</button>
-                </div>
+                <div class="goal-progress-text">${progressLabel}</div>
+                <div class="goal-controls">${controlsHtml}</div>
             </div>
         `;
         goalList.appendChild(goalDiv);
@@ -231,7 +320,32 @@ function renderGoals() {
 
 function adjustGoal(id, amount) {
     const goal = goals.find(function (g) { return g.id === id; });
-    goal.current = Math.max(0, goal.current + amount);
+    const today = getTodayString();
+
+    if (goal.type === 'daily_quota') {
+        const current = goal.dailyProgress[today] || 0;
+        goal.dailyProgress[today] = Math.max(0, current + amount);
+    } else {
+        goal.current = Math.max(0, goal.current + amount);
+        const addedToday = goal.dailyAdded[today] || 0;
+        goal.dailyAdded[today] = Math.max(0, addedToday + amount);
+    }
+
+    localStorage.setItem('goals', JSON.stringify(goals));
+    renderGoals();
+}
+
+function toggleGoalDay(id) {
+    const goal = goals.find(function (g) { return g.id === id; });
+    const today = getTodayString();
+    const index = goal.completedDates.indexOf(today);
+
+    if (index === -1) {
+        goal.completedDates.push(today);
+    } else {
+        goal.completedDates.splice(index, 1);
+    }
+
     localStorage.setItem('goals', JSON.stringify(goals));
     renderGoals();
 }
@@ -242,6 +356,8 @@ function editGoal(id) {
     goalNameInput.value = goal.name;
     goalTargetInput.value = goal.target;
     goalUnitInput.value = goal.unit;
+    setGoalTypeRadio(goal.type);
+    goalCountProgressInput.checked = goal.countInProgress !== false;
     editingGoalId = id;
     goalSubmitBtn.textContent = 'Save';
     goalNameInput.focus();
@@ -268,12 +384,24 @@ function deleteGoal(id) {
 goalForm.addEventListener('submit', function (e) {
     e.preventDefault();
 
+    const selectedType = getGoalType();
+
     if (editingGoalId !== null) {
         const goal = goals.find(function (g) { return g.id === editingGoalId; });
         goal.icon = goalIconInput.value.trim() || '\u2022';
         goal.name = goalNameInput.value;
         goal.target = Number(goalTargetInput.value);
         goal.unit = goalUnitInput.value;
+        goal.countInProgress = goalCountProgressInput.checked;
+
+        if (goal.type !== selectedType) {
+            goal.type = selectedType;
+            goal.current = 0;
+            goal.dailyAdded = {};
+            goal.dailyProgress = {};
+            goal.completedDates = [];
+        }
+
         editingGoalId = null;
         goalSubmitBtn.textContent = 'Add';
     } else {
@@ -283,7 +411,12 @@ goalForm.addEventListener('submit', function (e) {
             name: goalNameInput.value,
             target: Number(goalTargetInput.value),
             unit: goalUnitInput.value,
-            current: 0
+            type: selectedType,
+            countInProgress: goalCountProgressInput.checked,
+            current: 0,
+            dailyAdded: {},
+            dailyProgress: {},
+            completedDates: []
         });
     }
 
@@ -291,11 +424,13 @@ goalForm.addEventListener('submit', function (e) {
 
     renderGoals();
     goalForm.reset();
+    setGoalTypeRadio('lifetime');
 });
 
 const habitForm = document.getElementById('habit-form');
 const habitIconInput = document.getElementById('habit-icon');
 const habitNameInput = document.getElementById('habit-name');
+const habitCountProgressInput = document.getElementById('habit-count-progress');
 const habitSubmitBtn = document.getElementById('habit-submit-btn');
 const habitsSubtitle = document.getElementById('habits-subtitle');
 const habitList = document.getElementById('habit-list');
@@ -337,6 +472,7 @@ function renderHabits() {
             const isDone = habit.completedDates.indexOf(today) !== -1;
             const streak = calculateStreak(habit);
             const streakText = streak > 0 ? '\u{1F525} ' + streak + ' day streak!' : 'No streak yet';
+            const notCounted = habit.countInProgress === false;
 
             const habitDiv = document.createElement('div');
             habitDiv.className = 'habit-item' + (isDone ? ' done' : '');
@@ -345,7 +481,7 @@ function renderHabits() {
                 <div class="habit-icon">${habit.icon}</div>
                 <div class="habit-info">
                     <div class="habit-name">${habit.name}</div>
-                    <div class="habit-streak">${streakText}</div>
+                    <div class="habit-streak">${streakText}${notCounted ? ' <span class="not-counted-tag">not counted</span>' : ''}</div>
                 </div>
                 <button class="icon-btn" onclick="editHabit(${habit.id})">\u270f\ufe0f</button>
                 <button class="icon-btn" onclick="deleteHabit(${habit.id})">\u{1F5D1}\ufe0f</button>
@@ -376,6 +512,7 @@ function editHabit(id) {
     const habit = habits.find(function (h) { return h.id === id; });
     habitIconInput.value = habit.icon;
     habitNameInput.value = habit.name;
+    habitCountProgressInput.checked = habit.countInProgress !== false;
     editingHabitId = id;
     habitSubmitBtn.textContent = 'Save';
     habitNameInput.focus();
@@ -406,6 +543,7 @@ habitForm.addEventListener('submit', function (e) {
         const habit = habits.find(function (h) { return h.id === editingHabitId; });
         habit.icon = habitIconInput.value.trim() || '\u2022';
         habit.name = habitNameInput.value;
+        habit.countInProgress = habitCountProgressInput.checked;
         editingHabitId = null;
         habitSubmitBtn.textContent = 'Add';
     } else {
@@ -413,6 +551,7 @@ habitForm.addEventListener('submit', function (e) {
             id: Date.now(),
             icon: habitIconInput.value.trim() || '\u2022',
             name: habitNameInput.value,
+            countInProgress: habitCountProgressInput.checked,
             completedDates: []
         });
     }
@@ -531,25 +670,26 @@ function getOverallScore() {
     const scores = [];
 
     let routinePercent = 0;
-    if (tasks.length > 0) {
-        const doneToday = tasks.filter(function (t) { return t.completedDates.indexOf(today) !== -1; }).length;
-        routinePercent = Math.round((doneToday / tasks.length) * 100);
+    const countedTasks = tasks.filter(function (t) { return t.countInProgress !== false; });
+    if (countedTasks.length > 0) {
+        const doneToday = countedTasks.filter(function (t) { return t.completedDates.indexOf(today) !== -1; }).length;
+        routinePercent = Math.round((doneToday / countedTasks.length) * 100);
         scores.push(routinePercent);
     }
 
     let habitPercent = 0;
-    if (habits.length > 0) {
-        const doneToday = habits.filter(function (h) { return h.completedDates.indexOf(today) !== -1; }).length;
-        habitPercent = Math.round((doneToday / habits.length) * 100);
+    const countedHabits = habits.filter(function (h) { return h.countInProgress !== false; });
+    if (countedHabits.length > 0) {
+        const doneToday = countedHabits.filter(function (h) { return h.completedDates.indexOf(today) !== -1; }).length;
+        habitPercent = Math.round((doneToday / countedHabits.length) * 100);
         scores.push(habitPercent);
     }
 
     let goalPercent = 0;
-    if (goals.length > 0) {
-        const total = goals.reduce(function (sum, g) {
-            return sum + Math.min(100, Math.round((g.current / g.target) * 100));
-        }, 0);
-        goalPercent = Math.round(total / goals.length);
+    const countedGoals = goals.filter(function (g) { return g.countInProgress !== false; });
+    if (countedGoals.length > 0) {
+        const total = countedGoals.reduce(function (sum, g) { return sum + getGoalTodayScore(g); }, 0);
+        goalPercent = Math.round(total / countedGoals.length);
         scores.push(goalPercent);
     }
 
@@ -721,11 +861,23 @@ function renderHistory() {
     historyList.innerHTML = '';
 
     dates.forEach(function (date) {
+        const state = dailyState[date];
+        const moodText = state ? state.mood + '/10' : '\u2013';
+        const energyText = state ? state.energy + '/10' : '\u2013';
+        const sessionsText = sessionLog[date] || 0;
+
         const row = document.createElement('div');
         row.className = 'history-row';
         row.innerHTML = `
-            <span class="history-date">${date}</span>
-            <span class="history-score">${scoreHistory[date]}%</span>
+            <div class="history-row-top">
+                <span class="history-date">${date}</span>
+                <span class="history-score">${scoreHistory[date]}%</span>
+            </div>
+            <div class="history-row-detail">
+                <span>\u{1F60A} ${moodText}</span>
+                <span>\u26a1 ${energyText}</span>
+                <span>\u23f1\ufe0f ${sessionsText} sessions</span>
+            </div>
         `;
         historyList.appendChild(row);
     });
@@ -814,6 +966,15 @@ importInput.addEventListener('change', function () {
             sessionLog = data.sessionLog || {};
             dailyState = data.dailyState || {};
             scoreHistory = data.scoreHistory || {};
+
+            goals.forEach(function (g) {
+                if (!g.type) {
+                    g.type = g.resetsDaily ? 'daily_quota' : 'lifetime';
+                }
+                g.dailyAdded = g.dailyAdded || {};
+                g.dailyProgress = g.dailyProgress || {};
+                g.completedDates = g.completedDates || [];
+            });
 
             localStorage.setItem('userName', userName);
             localStorage.setItem('tasks', JSON.stringify(tasks));
