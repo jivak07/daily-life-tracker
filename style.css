@@ -148,14 +148,14 @@ body {
   transition: width 0.3s ease;
 }
 
-#task-form {
+form {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 16px;
 }
 
-#task-form input {
+form input {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
@@ -163,6 +163,43 @@ body {
   color: #f1f5f9;
   font-size: 13px;
   outline: none;
+}
+
+form button {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
+  color: #ffffffff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.checkbox-row {
+  display: flex;
+  gap: 18px;
+  flex-basis: 100%;
+  margin: 2px 0 4px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto;
+  accent-color: #8b5cf6;
+  cursor: pointer;
+}
+
+.not-counted-tag {
+  color: #64748b;
+  font-style: italic;
 }
 
 #task-icon {
@@ -175,17 +212,6 @@ body {
 
 #task-time {
   flex: 0 0 100px;
-}
-
-#task-form button {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  border: none;
-  color: #fff;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
 }
 
 .task-item {
@@ -267,34 +293,6 @@ body {
   color: #64748b;
   font-style: italic;
   padding: 30px 0;
-}
-
-form {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-}
-
-form input {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 10px 12px;
-  color: #f1f5f9;
-  font-size: 13px;
-  outline: none;
-}
-
-form button {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  border: none;
-  color: #fff;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
 }
 
 #goal-icon {
@@ -694,14 +692,18 @@ form button {
 }
 
 .history-row {
-  display: flex;
-  justify-content: space-between;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 10px;
   padding: 10px 14px;
   margin-bottom: 6px;
+}
+
+.history-row-top {
+  display: flex;
+  justify-content: space-between;
   font-size: 13px;
+  margin-bottom: 6px;
 }
 
 .history-date {
@@ -711,6 +713,13 @@ form button {
 .history-score {
   color: #f1f5f9;
   font-weight: 600;
+}
+
+.history-row-detail {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: #64748b;
 }
 
 .journey-toggle {
@@ -831,4 +840,21 @@ form button {
 
 .import-label input[type="file"] {
   display: none;
+}
+
+.goal-check-btn {
+  width: 100%;
+  padding: 9px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.goal-check-btn.checked {
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-color: transparent;
 }
