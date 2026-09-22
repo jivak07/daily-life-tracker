@@ -109,6 +109,9 @@
           <input type="text" id="task-icon" placeholder="Add Icon for task (e.g. 📖)" maxlength="2">
           <input type="text" id="task-name" placeholder="Task name" required>
           <input type="text" id="task-time" placeholder="Time (e.g. 6:00 AM)">
+          <div class="checkbox-row">
+            <label class="checkbox-label"><input type="checkbox" id="task-count-progress" checked> Count in progres</label>
+          </div>
           <button type="submit" id="task-submit-btn">Add</button>
         </form>
 
@@ -125,7 +128,15 @@
           <input type="text" id="goal-icon" placeholder="Add Icon for goal (e.g. 📚)" maxlength="2">
           <input type="text" id="goal-name" placeholder="Goal name" required>
           <input type="number" id="goal-target" placeholder="Target" min="1" required>
-          <input type="text" id="goal-unit" placeholder="Unit (e.g. books)">
+          <input type="text" id="goal-unit" placeholder="Unit (e.g. books, days)">
+          <div class="checkbox-row">
+            <label class="checkbox-label"><input type="radio" name="goal-type" value="lifetime" checked> Lifetime total</label>
+            <label class="checkbox-label"><input type="radio" name="goal-type" value="daily_checkoff"> Daily check-off</label>
+            <label class="checkbox-label"><input type="radio" name="goal-type" value="daily_quota"> Daily quota (resets)</label>
+          </div>
+          <div class="checkbox-row">
+            <label class="checkbox-label"><input type="checkbox" id="goal-count-progress" checked> Count in progress</label>
+          </div>
           <button type="submit" id="goal-submit-btn">Add</button>
         </form>
 
@@ -141,6 +152,9 @@
         <form id="habit-form">
           <input type="text" id="habit-icon" placeholder="Add Icon for habit (e.g. 💧)" maxlength="2">
           <input type="text" id="habit-name" placeholder="Habit name" required>
+          <div class="checkbox-row">
+            <label class="checkbox-label"><input type="checkbox" id="habit-count-progress" checked> Count in progress</label>
+          </div>
           <button type="submit" id="habit-submit-btn">Add</button>
         </form>
 
@@ -212,6 +226,14 @@
 
         <div class="logic-card">
           <p>Home score = Routine done today + Habits done today + Goals progress, averaged. Haven't added something yet? It's skipped, not counted as 0. Keeps it fair.</p>
+        </div>
+
+        <div class="logic-card">
+          <p>Not everything should count toward your score. 'Lunch at 1pm' isn't progress, but 'Study' is. Turn off 'Count in progress' for the boring stuff.</p>
+        </div>
+
+        <div class="logic-card">
+          <p>Goals come in 3 types. Lifetime total keeps adding up forever (like 210 pages total) — today's score is 100% only if you actually added something today, 0% if you didn't touch it. Daily check-off is for stuff you do once a day for N days (like waking up early for 30 days) — one tap marks today done, just like a habit. Daily quota resets every midnight (like 8 glasses of water) — today's number out of target is today's score, fresh start tomorrow.</p>
         </div>
 
         <div class="logic-card">
