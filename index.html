@@ -105,14 +105,19 @@
           <div class="progress-fill" id="routine-progress-fill"></div>
         </div>
 
-        <form id="task-form">
+        <button class="add-card-btn" id="task-add-toggle">+ Add Task</button>
+
+        <form id="task-form" class="add-form-hidden">
           <input type="text" id="task-icon" placeholder="Add Icon for task (e.g. 📖)" maxlength="2">
           <input type="text" id="task-name" placeholder="Task name" required>
           <input type="text" id="task-time" placeholder="Time (e.g. 6:00 AM)">
           <div class="checkbox-row">
-            <label class="checkbox-label"><input type="checkbox" id="task-count-progress" checked> Count in progres</label>
+            <label class="checkbox-label"><input type="checkbox" id="task-count-progress" checked> Count in progress</label>
           </div>
-          <button type="submit" id="task-submit-btn">Add</button>
+          <div class="form-actions">
+            <button type="submit" id="task-submit-btn">Add</button>
+            <button type="button" id="task-cancel-btn">Cancel</button>
+          </div>
         </form>
 
         <div id="task-list"></div>
@@ -124,7 +129,9 @@
           <div class="tab-subtitle" id="goals-subtitle"></div>
         </div>
 
-        <form id="goal-form">
+        <button class="add-card-btn" id="goal-add-toggle">+ Add Goal</button>
+
+        <form id="goal-form" class="add-form-hidden">
           <input type="text" id="goal-icon" placeholder="Add Icon for goal (e.g. 📚)" maxlength="2">
           <input type="text" id="goal-name" placeholder="Goal name" required>
           <input type="number" id="goal-target" placeholder="Target" min="1" required>
@@ -136,8 +143,12 @@
           </div>
           <div class="checkbox-row">
             <label class="checkbox-label"><input type="checkbox" id="goal-count-progress" checked> Count in progress</label>
+            <label class="checkbox-label"><input type="checkbox" id="goal-track-journey"> Track in Journey</label>
           </div>
-          <button type="submit" id="goal-submit-btn">Add</button>
+          <div class="form-actions">
+            <button type="submit" id="goal-submit-btn">Add</button>
+            <button type="button" id="goal-cancel-btn">Cancel</button>
+          </div>
         </form>
 
         <div id="goal-list"></div>
@@ -149,13 +160,18 @@
           <div class="tab-subtitle" id="habits-subtitle"></div>
         </div>
 
-        <form id="habit-form">
+        <button class="add-card-btn" id="habit-add-toggle">+ Add Habit</button>
+
+        <form id="habit-form" class="add-form-hidden">
           <input type="text" id="habit-icon" placeholder="Add Icon for habit (e.g. 💧)" maxlength="2">
           <input type="text" id="habit-name" placeholder="Habit name" required>
           <div class="checkbox-row">
             <label class="checkbox-label"><input type="checkbox" id="habit-count-progress" checked> Count in progress</label>
           </div>
-          <button type="submit" id="habit-submit-btn">Add</button>
+          <div class="form-actions">
+            <button type="submit" id="habit-submit-btn">Add</button>
+            <button type="button" id="habit-cancel-btn">Cancel</button>
+          </div>
         </form>
 
         <div id="habit-list"></div>
@@ -212,16 +228,26 @@
         </div>
 
         <div class="journey-toggle">
-          <button class="journey-toggle-btn active" data-days="7">7 Days</button>
-          <button class="journey-toggle-btn" data-days="30">30 Days</button>
+          <button class="journey-toggle-btn active" data-period="7d">7D</button>
+          <button class="journey-toggle-btn" data-period="30d">30D</button>
+          <button class="journey-toggle-btn" data-period="3m">3M</button>
+          <button class="journey-toggle-btn" data-period="6m">6M</button>
+          <button class="journey-toggle-btn" data-period="1y">1Y</button>
         </div>
 
         <div class="journey-chart" id="journey-chart"></div>
+
+        <div class="tab-header">
+          <div class="tab-title">Pinned Goals</div>
+          <div class="tab-subtitle">Long-term goals you're tracking closely</div>
+        </div>
+
+        <div id="goal-journey-list"></div>
       </section>
 
       <section id="logic" class="tab-panel">
         <div class="tab-header">
-          <div class="tab-title">How It Works</div>
+          <div class="tab-title">Get Know Here, How It Works</div>
         </div>
 
         <div class="logic-card">
@@ -233,7 +259,11 @@
         </div>
 
         <div class="logic-card">
-          <p>Goals come in 3 types. Lifetime total keeps adding up forever (like 210 pages total) — today's score is 100% only if you actually added something today, 0% if you didn't touch it. Daily check-off is for stuff you do once a day for N days (like waking up early for 30 days) — one tap marks today done, just like a habit. Daily quota resets every midnight (like 8 glasses of water) — today's number out of target is today's score, fresh start tomorrow.</p>
+          <p>Pin the goals that really matter, like:- a race you're training for, a reading streak and they get their own progress line with checkpoints in Journey Tab. Hit the target and it turns green with a finish banner. Delete the goal later and it stays frozen there, until you clear (delete manually) it from Journey yourself.</p>
+        </div>
+
+        <div class="logic-card">
+          <p>Pin the goals that really matter, like:- a race you're training for, a reading streak, and they get their own chart in Journey Tab. Delete the goal later and the chart stays, until you clear it from Journey yourself.</p>
         </div>
 
         <div class="logic-card">
@@ -241,7 +271,7 @@
         </div>
 
         <div class="logic-card">
-          <p>Everything stays on your device only. Nobody else can see it. Want a copy or moving phones? Use Export below.</p>
+          <p>Everything stays on your device only. Nobody else can see it. Want a copy or moving phones? Use Export below Asap.</p>
         </div>
 
         <div class="tab-header">
