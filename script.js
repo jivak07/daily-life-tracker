@@ -41,6 +41,7 @@ tabButtons.forEach(function (button) {
 
         if (targetTab === 'journey') {
             renderJourney();
+            renderGoalJourneys();
         }
     });
 });
@@ -56,12 +57,30 @@ const taskNameInput = document.getElementById('task-name');
 const taskTimeInput = document.getElementById('task-time');
 const taskCountProgressInput = document.getElementById('task-count-progress');
 const taskSubmitBtn = document.getElementById('task-submit-btn');
+const taskAddToggle = document.getElementById('task-add-toggle');
+const taskCancelBtn = document.getElementById('task-cancel-btn');
 const routineSubtitle = document.getElementById('routine-subtitle');
 const routineProgressFill = document.getElementById('routine-progress-fill');
 const taskList = document.getElementById('task-list');
 
 let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 let editingTaskId = null;
+
+function openTaskForm() {
+    taskForm.classList.remove('add-form-hidden');
+    taskAddToggle.style.display = 'none';
+}
+
+function closeTaskForm() {
+    taskForm.classList.add('add-form-hidden');
+    taskAddToggle.style.display = 'block';
+    taskForm.reset();
+    editingTaskId = null;
+    taskSubmitBtn.textContent = 'Add';
+}
+
+taskAddToggle.addEventListener('click', openTaskForm);
+taskCancelBtn.addEventListener('click', closeTaskForm);
 
 function renderRoutine() {
     taskList.innerHTML = '';
@@ -122,6 +141,7 @@ function editTask(id) {
     taskCountProgressInput.checked = task.countInProgress !== false;
     editingTaskId = id;
     taskSubmitBtn.textContent = 'Save';
+    openTaskForm();
     taskNameInput.focus();
 }
 
@@ -135,9 +155,7 @@ function deleteTask(id) {
     localStorage.setItem('tasks', JSON.stringify(tasks));
 
     if (editingTaskId === id) {
-        editingTaskId = null;
-        taskSubmitBtn.textContent = 'Add';
-        taskForm.reset();
+        closeTaskForm();
     }
 
     renderRoutine();
@@ -152,8 +170,6 @@ taskForm.addEventListener('submit', function (e) {
         task.name = taskNameInput.value;
         task.time = taskTimeInput.value;
         task.countInProgress = taskCountProgressInput.checked;
-        editingTaskId = null;
-        taskSubmitBtn.textContent = 'Add';
     } else {
         tasks.push({
             id: Date.now(),
@@ -168,7 +184,7 @@ taskForm.addEventListener('submit', function (e) {
     localStorage.setItem('tasks', JSON.stringify(tasks));
 
     renderRoutine();
-    taskForm.reset();
+    closeTaskForm();
 });
 
 const goalForm = document.getElementById('goal-form');
@@ -177,7 +193,10 @@ const goalNameInput = document.getElementById('goal-name');
 const goalTargetInput = document.getElementById('goal-target');
 const goalUnitInput = document.getElementById('goal-unit');
 const goalCountProgressInput = document.getElementById('goal-count-progress');
+const goalTrackJourneyInput = document.getElementById('goal-track-journey');
 const goalSubmitBtn = document.getElementById('goal-submit-btn');
+const goalAddToggle = document.getElementById('goal-add-toggle');
+const goalCancelBtn = document.getElementById('goal-cancel-btn');
 const goalsSubtitle = document.getElementById('goals-subtitle');
 const goalList = document.getElementById('goal-list');
 
@@ -200,7 +219,27 @@ goals.forEach(function (g) {
     if (typeof g.current !== 'number') {
         g.current = 0;
     }
+    if (typeof g.trackInJourney !== 'boolean') {
+        g.trackInJourney = false;
+    }
 });
+
+function openGoalForm() {
+    goalForm.classList.remove('add-form-hidden');
+    goalAddToggle.style.display = 'none';
+}
+
+function closeGoalForm() {
+    goalForm.classList.add('add-form-hidden');
+    goalAddToggle.style.display = 'block';
+    goalForm.reset();
+    setGoalTypeRadio('lifetime');
+    editingGoalId = null;
+    goalSubmitBtn.textContent = 'Add';
+}
+
+goalAddToggle.addEventListener('click', openGoalForm);
+goalCancelBtn.addEventListener('click', closeGoalForm);
 
 function getGoalType() {
     const checked = document.querySelector('input[name="goal-type"]:checked');
@@ -358,8 +397,10 @@ function editGoal(id) {
     goalUnitInput.value = goal.unit;
     setGoalTypeRadio(goal.type);
     goalCountProgressInput.checked = goal.countInProgress !== false;
+    goalTrackJourneyInput.checked = goal.trackInJourney === true;
     editingGoalId = id;
     goalSubmitBtn.textContent = 'Save';
+    openGoalForm();
     goalNameInput.focus();
 }
 
@@ -373,9 +414,7 @@ function deleteGoal(id) {
     localStorage.setItem('goals', JSON.stringify(goals));
 
     if (editingGoalId === id) {
-        editingGoalId = null;
-        goalSubmitBtn.textContent = 'Add';
-        goalForm.reset();
+        closeGoalForm();
     }
 
     renderGoals();
@@ -385,27 +424,26 @@ goalForm.addEventListener('submit', function (e) {
     e.preventDefault();
 
     const selectedType = getGoalType();
+    let activeGoal;
 
     if (editingGoalId !== null) {
-        const goal = goals.find(function (g) { return g.id === editingGoalId; });
-        goal.icon = goalIconInput.value.trim() || '\u2022';
-        goal.name = goalNameInput.value;
-        goal.target = Number(goalTargetInput.value);
-        goal.unit = goalUnitInput.value;
-        goal.countInProgress = goalCountProgressInput.checked;
+        activeGoal = goals.find(function (g) { return g.id === editingGoalId; });
+        activeGoal.icon = goalIconInput.value.trim() || '\u2022';
+        activeGoal.name = goalNameInput.value;
+        activeGoal.target = Number(goalTargetInput.value);
+        activeGoal.unit = goalUnitInput.value;
+        activeGoal.countInProgress = goalCountProgressInput.checked;
+        activeGoal.trackInJourney = goalTrackJourneyInput.checked;
 
-        if (goal.type !== selectedType) {
-            goal.type = selectedType;
-            goal.current = 0;
-            goal.dailyAdded = {};
-            goal.dailyProgress = {};
-            goal.completedDates = [];
+        if (activeGoal.type !== selectedType) {
+            activeGoal.type = selectedType;
+            activeGoal.current = 0;
+            activeGoal.dailyAdded = {};
+            activeGoal.dailyProgress = {};
+            activeGoal.completedDates = [];
         }
-
-        editingGoalId = null;
-        goalSubmitBtn.textContent = 'Add';
     } else {
-        goals.push({
+        activeGoal = {
             id: Date.now(),
             icon: goalIconInput.value.trim() || '\u2022',
             name: goalNameInput.value,
@@ -413,18 +451,21 @@ goalForm.addEventListener('submit', function (e) {
             unit: goalUnitInput.value,
             type: selectedType,
             countInProgress: goalCountProgressInput.checked,
+            trackInJourney: goalTrackJourneyInput.checked,
             current: 0,
             dailyAdded: {},
             dailyProgress: {},
             completedDates: []
-        });
+        };
+        goals.push(activeGoal);
     }
+
+    ensureGoalJourneyEntry(activeGoal);
 
     localStorage.setItem('goals', JSON.stringify(goals));
 
     renderGoals();
-    goalForm.reset();
-    setGoalTypeRadio('lifetime');
+    closeGoalForm();
 });
 
 const habitForm = document.getElementById('habit-form');
@@ -432,11 +473,29 @@ const habitIconInput = document.getElementById('habit-icon');
 const habitNameInput = document.getElementById('habit-name');
 const habitCountProgressInput = document.getElementById('habit-count-progress');
 const habitSubmitBtn = document.getElementById('habit-submit-btn');
+const habitAddToggle = document.getElementById('habit-add-toggle');
+const habitCancelBtn = document.getElementById('habit-cancel-btn');
 const habitsSubtitle = document.getElementById('habits-subtitle');
 const habitList = document.getElementById('habit-list');
 
 let habits = JSON.parse(localStorage.getItem('habits')) || [];
 let editingHabitId = null;
+
+function openHabitForm() {
+    habitForm.classList.remove('add-form-hidden');
+    habitAddToggle.style.display = 'none';
+}
+
+function closeHabitForm() {
+    habitForm.classList.add('add-form-hidden');
+    habitAddToggle.style.display = 'block';
+    habitForm.reset();
+    editingHabitId = null;
+    habitSubmitBtn.textContent = 'Add';
+}
+
+habitAddToggle.addEventListener('click', openHabitForm);
+habitCancelBtn.addEventListener('click', closeHabitForm);
 
 function calculateStreak(habit) {
     const today = new Date();
@@ -515,6 +574,7 @@ function editHabit(id) {
     habitCountProgressInput.checked = habit.countInProgress !== false;
     editingHabitId = id;
     habitSubmitBtn.textContent = 'Save';
+    openHabitForm();
     habitNameInput.focus();
 }
 
@@ -528,9 +588,7 @@ function deleteHabit(id) {
     localStorage.setItem('habits', JSON.stringify(habits));
 
     if (editingHabitId === id) {
-        editingHabitId = null;
-        habitSubmitBtn.textContent = 'Add';
-        habitForm.reset();
+        closeHabitForm();
     }
 
     renderHabits();
@@ -544,8 +602,6 @@ habitForm.addEventListener('submit', function (e) {
         habit.icon = habitIconInput.value.trim() || '\u2022';
         habit.name = habitNameInput.value;
         habit.countInProgress = habitCountProgressInput.checked;
-        editingHabitId = null;
-        habitSubmitBtn.textContent = 'Add';
     } else {
         habits.push({
             id: Date.now(),
@@ -559,7 +615,7 @@ habitForm.addEventListener('submit', function (e) {
     localStorage.setItem('habits', JSON.stringify(habits));
 
     renderHabits();
-    habitForm.reset();
+    closeHabitForm();
 });
 
 const timerModeEl = document.getElementById('timer-mode');
@@ -733,6 +789,7 @@ function updateHeaderScore() {
     headerTimeEl.textContent = new Date().toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
 
     logTodayScore(result.overall);
+    updatePinnedGoalJourneys();
 }
 
 function logTodayScore(overall) {
@@ -883,7 +940,7 @@ function renderHistory() {
     });
 }
 
-let journeyDays = 7;
+let journeyPeriod = '7d';
 
 const journeyToggleBtns = document.querySelectorAll('.journey-toggle-btn');
 
@@ -891,34 +948,242 @@ journeyToggleBtns.forEach(function (btn) {
     btn.addEventListener('click', function () {
         journeyToggleBtns.forEach(function (b) { b.classList.remove('active'); });
         btn.classList.add('active');
-        journeyDays = Number(btn.getAttribute('data-days'));
+        journeyPeriod = btn.getAttribute('data-period');
         renderJourney();
     });
 });
 
-function renderJourney() {
-    const journeyChart = document.getElementById('journey-chart');
-    journeyChart.innerHTML = '';
-    journeyChart.classList.toggle('journey-chart-dense', journeyDays > 7);
+function buildDailyBars(numDays, labelType) {
+    const bars = [];
 
-    for (let i = journeyDays - 1; i >= 0; i--) {
+    for (let i = numDays - 1; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
         const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-        const label = journeyDays === 7 ? d.toLocaleDateString('en', { weekday: 'short' }) : d.getDate();
-        const score = scoreHistory[dateStr] || 0;
-
-        const bar = document.createElement('div');
-        bar.className = 'journey-bar';
-        bar.innerHTML = `
-            <div class="journey-bar-track">
-                <div class="journey-bar-fill" style="height: ${score}%"></div>
-            </div>
-            ${journeyDays === 7 ? '<div class="journey-bar-value">' + score + '%</div>' : ''}
-            <div class="journey-bar-label">${label}</div>
-        `;
-        journeyChart.appendChild(bar);
+        const label = labelType === 'weekday' ? d.toLocaleDateString('en', { weekday: 'short' }) : d.getDate();
+        const score = scoreHistory[dateStr] !== undefined ? scoreHistory[dateStr] : 0;
+        bars.push({ label: label, score: score });
     }
+
+    return bars;
+}
+
+function buildTrackedSeries(numDays) {
+    const series = [];
+
+    for (let i = numDays - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        const tracked = scoreHistory[dateStr] !== undefined;
+        series.push({ date: d, tracked: tracked, score: tracked ? scoreHistory[dateStr] : 0 });
+    }
+
+    return series;
+}
+
+function formatDayMonth(d) {
+    return d.toLocaleDateString('en', { day: 'numeric', month: 'short' });
+}
+
+function formatMonthOnly(d) {
+    return d.toLocaleDateString('en', { month: 'short' });
+}
+
+function renderWaveformChart(container, series) {
+    let barsHtml = '';
+
+    series.forEach(function (point) {
+        const height = point.tracked ? Math.max(point.score, 3) : 3;
+        const cls = 'waveform-bar-fill' + (point.tracked ? '' : ' untracked');
+        barsHtml += '<div class="waveform-bar"><div class="' + cls + '" style="height: ' + height + '%"></div></div>';
+    });
+
+    container.innerHTML = barsHtml;
+}
+
+function renderJourney() {
+    const journeyChart = document.getElementById('journey-chart');
+
+    if (journeyPeriod === '7d') {
+        journeyChart.className = 'journey-chart';
+        journeyChart.innerHTML = '';
+
+        const bars = buildDailyBars(7, 'weekday');
+        bars.forEach(function (bar) {
+            const barDiv = document.createElement('div');
+            barDiv.className = 'journey-bar';
+            barDiv.innerHTML = `
+                <div class="journey-bar-track">
+                    <div class="journey-bar-fill" style="height: ${bar.score}%"></div>
+                </div>
+                <div class="journey-bar-value">${bar.score}%</div>
+                <div class="journey-bar-label">${bar.label}</div>
+            `;
+            journeyChart.appendChild(barDiv);
+        });
+        return;
+    }
+
+    let numDays = 30;
+    let labelCount = 5;
+    let formatFn = formatDayMonth;
+
+    if (journeyPeriod === '3m') {
+        numDays = 90;
+    } else if (journeyPeriod === '6m') {
+        numDays = 182;
+        labelCount = 6;
+        formatFn = formatMonthOnly;
+    } else if (journeyPeriod === '1y') {
+        numDays = 365;
+        labelCount = 6;
+        formatFn = formatMonthOnly;
+    }
+
+    const series = buildTrackedSeries(numDays);
+
+    journeyChart.className = 'journey-chart-container';
+    journeyChart.innerHTML = '<div class="waveform-chart"></div><div class="waveform-labels"></div>';
+
+    renderWaveformChart(journeyChart.querySelector('.waveform-chart'), series);
+
+    const labelsEl = journeyChart.querySelector('.waveform-labels');
+    const lastIndex = series.length - 1;
+    let labelsHtml = '';
+
+    for (let i = 0; i < labelCount; i++) {
+        const index = Math.round((i / (labelCount - 1)) * lastIndex);
+        const x = (index / lastIndex) * 100;
+        labelsHtml += '<span style="left: ' + x.toFixed(1) + '%">' + formatFn(series[index].date) + '</span>';
+    }
+
+    labelsEl.innerHTML = labelsHtml;
+}
+
+let goalJourneys = JSON.parse(localStorage.getItem('goalJourneys')) || [];
+
+function ensureGoalJourneyEntry(goal) {
+    if (!goal.trackInJourney) {
+        return;
+    }
+
+    const exists = goalJourneys.find(function (e) { return e.id === goal.id; });
+    if (!exists) {
+        goalJourneys.push({
+            id: goal.id,
+            icon: goal.icon,
+            name: goal.name,
+            target: goal.target,
+            unit: goal.unit,
+            type: goal.type,
+            amount: getGoalCurrentAmount(goal),
+            active: true
+        });
+    }
+}
+
+function updatePinnedGoalJourneys() {
+    goalJourneys.forEach(function (entry) {
+        const liveGoal = goals.find(function (g) { return g.id === entry.id; });
+        const stillPinned = liveGoal && liveGoal.trackInJourney;
+
+        if (stillPinned) {
+            entry.icon = liveGoal.icon;
+            entry.name = liveGoal.name;
+            entry.target = liveGoal.target;
+            entry.unit = liveGoal.unit;
+            entry.type = liveGoal.type;
+            entry.amount = getGoalCurrentAmount(liveGoal);
+            entry.active = true;
+        } else {
+            entry.active = false;
+        }
+    });
+
+    localStorage.setItem('goalJourneys', JSON.stringify(goalJourneys));
+}
+
+function removeGoalJourneyEntry(id) {
+    const confirmed = confirm('Remove this goal from Journey? This cannot be undone.');
+    if (!confirmed) {
+        return;
+    }
+
+    goalJourneys = goalJourneys.filter(function (e) { return e.id !== id; });
+    localStorage.setItem('goalJourneys', JSON.stringify(goalJourneys));
+
+    const liveGoal = goals.find(function (g) { return g.id === id; });
+    if (liveGoal) {
+        liveGoal.trackInJourney = false;
+        localStorage.setItem('goals', JSON.stringify(goals));
+    }
+
+    renderGoalJourneys();
+}
+
+function renderGoalJourneys() {
+    const container = document.getElementById('goal-journey-list');
+    container.innerHTML = '';
+
+    if (goalJourneys.length === 0) {
+        container.innerHTML = '<p class="empty">No goals pinned yet. Open a goal and turn on "Track in Journey".</p>';
+        return;
+    }
+
+    goalJourneys.forEach(function (entry) {
+        const percent = Math.min(100, Math.round((entry.amount / entry.target) * 100));
+        const isAchieved = percent >= 100;
+        const remaining = Math.max(0, entry.target - entry.amount);
+
+        let subtitle = entry.amount + ' of ' + entry.target;
+        if (entry.type === 'daily_checkoff') {
+            subtitle += ' days';
+        } else if (entry.type === 'daily_quota') {
+            subtitle = 'Today: ' + entry.amount + ' of ' + entry.target + ' ' + entry.unit;
+        } else if (entry.unit) {
+            subtitle += ' ' + entry.unit;
+        }
+
+        const checkpoints = [0, 25, 50, 75, 100];
+        let dotsHtml = '';
+        let labelsHtml = '';
+
+        checkpoints.forEach(function (cp, index) {
+            const filled = percent >= cp;
+            let posClass = '';
+            if (index === 0) {
+                posClass = ' dot-first';
+            } else if (index === checkpoints.length - 1) {
+                posClass = ' dot-last';
+            }
+            dotsHtml += '<div class="milestone-dot' + posClass + (filled ? ' filled' : '') + '" style="left: ' + cp + '%"></div>';
+            labelsHtml += '<span>' + (cp === 100 ? '\u{1F3C6}' : cp + '%') + '</span>';
+        });
+
+        const card = document.createElement('div');
+        card.className = 'milestone-card' + (isAchieved ? ' achieved' : '');
+        card.innerHTML = `
+            <div class="milestone-top">
+                <div class="milestone-icon">${entry.icon}</div>
+                <div class="milestone-info">
+                    <div class="milestone-name">${entry.name}${entry.active ? '' : ' <span class="not-counted-tag">goal removed</span>'}</div>
+                    <div class="milestone-sub">${subtitle}</div>
+                </div>
+                <button class="icon-btn milestone-remove" onclick="removeGoalJourneyEntry(${entry.id})">\u{1F5D1}\ufe0f</button>
+                <div class="milestone-percent">${percent}%</div>
+            </div>
+            <div class="milestone-track">
+                <div class="milestone-track-fill" style="width: ${percent}%"></div>
+                ${dotsHtml}
+            </div>
+            <div class="milestone-labels">${labelsHtml}</div>
+            ${isAchieved
+                ? '<div class="milestone-achieved">\u{1F389} GOAL ACHIEVED!</div>'
+                : '<div class="milestone-bottom"><span class="milestone-remaining">' + remaining + ' more to go</span></div>'}
+        `;
+        container.appendChild(card);
+    });
 }
 
 const exportBtn = document.getElementById('export-btn');
@@ -932,7 +1197,8 @@ exportBtn.addEventListener('click', function () {
         habits: habits,
         sessionLog: sessionLog,
         dailyState: dailyState,
-        scoreHistory: scoreHistory
+        scoreHistory: scoreHistory,
+        goalJourneys: goalJourneys
     };
 
     const jsonString = JSON.stringify(data, null, 2);
@@ -966,6 +1232,7 @@ importInput.addEventListener('change', function () {
             sessionLog = data.sessionLog || {};
             dailyState = data.dailyState || {};
             scoreHistory = data.scoreHistory || {};
+            goalJourneys = data.goalJourneys || [];
 
             goals.forEach(function (g) {
                 if (!g.type) {
@@ -974,6 +1241,9 @@ importInput.addEventListener('change', function () {
                 g.dailyAdded = g.dailyAdded || {};
                 g.dailyProgress = g.dailyProgress || {};
                 g.completedDates = g.completedDates || [];
+                if (typeof g.trackInJourney !== 'boolean') {
+                    g.trackInJourney = false;
+                }
             });
 
             localStorage.setItem('userName', userName);
@@ -983,6 +1253,7 @@ importInput.addEventListener('change', function () {
             localStorage.setItem('sessionLog', JSON.stringify(sessionLog));
             localStorage.setItem('dailyState', JSON.stringify(dailyState));
             localStorage.setItem('scoreHistory', JSON.stringify(scoreHistory));
+            localStorage.setItem('goalJourneys', JSON.stringify(goalJourneys));
 
             document.getElementById('greeting').textContent = '\u{1F464} ' + userName + ' \u00b7 ' + getFormattedDate();
             renderRoutine();
