@@ -751,6 +751,7 @@ form button {
   align-items: flex-end;
   justify-content: space-between;
   gap: 8px;
+  margin-bottom: 24px;
 }
 
 .journey-bar {
@@ -762,7 +763,7 @@ form button {
 
 .journey-bar-track {
   width: 100%;
-  height: 120px;
+  height: 160px;
   display: flex;
   align-items: flex-end;
 }
@@ -787,16 +788,51 @@ form button {
   margin-top: 2px;
 }
 
-.journey-chart-dense {
-  gap: 3px;
+.journey-chart-container {
+  margin-bottom: 24px;
 }
 
-.journey-chart-dense .journey-bar-track {
-  height: 90px;
+.waveform-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 160px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 6px;
 }
 
-.journey-chart-dense .journey-bar-label {
-  font-size: 8px;
+.waveform-bar {
+  flex: 1;
+  height: 100%;
+  min-width: 1px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.waveform-bar-fill {
+  width: 100%;
+  border-radius: 1px 1px 0 0;
+  background: linear-gradient(180deg, #8b5cf6, #6366f1);
+}
+
+.waveform-bar-fill.untracked {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.waveform-labels {
+  position: relative;
+  height: 16px;
+  margin-top: 6px;
+}
+
+.waveform-labels span {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: #64748b;
+  white-space: nowrap;
 }
 
 .logic-card {
@@ -857,4 +893,178 @@ form button {
 .goal-check-btn.checked {
   background: linear-gradient(135deg, #10b981, #059669);
   border-color: transparent;
+}
+
+.add-card-btn {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px dashed rgba(139, 92, 246, 0.4);
+  color: #a5b4fc;
+  padding: 14px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.add-card-btn:hover {
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.7);
+}
+
+.add-form-hidden {
+  display: none;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  flex-basis: 100%;
+}
+
+.form-actions button {
+  flex: 1;
+}
+
+.form-actions button[type="button"] {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+}
+
+.milestone-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+
+.milestone-card.achieved {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.milestone-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.milestone-icon {
+  font-size: 22px;
+}
+
+.milestone-info {
+  flex: 1;
+}
+
+.milestone-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.milestone-sub {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.milestone-remove {
+  margin-top: 2px;
+}
+
+.milestone-percent {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fbbf24;
+  margin-left: 4px;
+}
+
+.milestone-card.achieved .milestone-percent {
+  color: #4ade80;
+}
+
+.milestone-track {
+  position: relative;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  margin: 0 5px 10px;
+}
+
+.milestone-track-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 2px;
+  background: #fbbf24;
+  transition: width 0.3s ease;
+}
+
+.milestone-card.achieved .milestone-track-fill {
+  background: #10b981;
+}
+
+.milestone-dot {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #334155;
+  border: 2px solid #0a0a16;
+}
+
+.milestone-dot.dot-first {
+  transform: translate(0, -50%);
+}
+
+.milestone-dot.dot-last {
+  transform: translate(-100%, -50%);
+}
+
+.milestone-dot.filled {
+  background: #fbbf24;
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
+}
+
+.milestone-card.achieved .milestone-dot.filled {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+.milestone-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 2px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.milestone-bottom {
+  text-align: right;
+  margin-top: 6px;
+}
+
+.milestone-remaining {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.milestone-achieved {
+  margin-top: 10px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #4ade80;
 }
