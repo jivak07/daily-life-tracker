@@ -4,13 +4,69 @@
   box-sizing: border-box;
 }
 
+:root {
+  --bg: #040410;
+  --glow-1: rgba(99, 102, 241, 0.18);
+  --glow-2: rgba(139, 92, 246, 0.12);
+  --text: #f1f5f9;
+  --text-soft: #e2e8f0;
+  --text-sub: #94a3b8;
+  --text-muted: #64748b;
+  --text-logic: #cbd5e1;
+  --card-bg: rgba(255, 255, 255, 0.03);
+  --card-border: rgba(255, 255, 255, 0.07);
+  --surface-bg: rgba(255, 255, 255, 0.05);
+  --surface-border: rgba(255, 255, 255, 0.1);
+  --track-bg: rgba(255, 255, 255, 0.07);
+  --accent-text: #a5b4fc;
+  --done-text: #6ee7b7;
+  --alert-text: #fecaca;
+  --amber: #fbbf24;
+  --amber-deep: #f59e0b;
+  --score-red: #f87171;
+  --score-cyan: #22d3ee;
+  --score-green: #4ade80;
+}
+
+[data-theme="light"] {
+  --bg: #f3f2fa;
+  --glow-1: rgba(99, 102, 241, 0.1);
+  --glow-2: rgba(139, 92, 246, 0.08);
+  --text: #1e1b3a;
+  --text-soft: #26263f;
+  --text-sub: #4c4f66;
+  --text-muted: #6b6f85;
+  --text-logic: #3c3d56;
+  --card-bg: rgba(255, 255, 255, 0.75);
+  --card-border: rgba(30, 27, 58, 0.1);
+  --surface-bg: rgba(30, 27, 58, 0.06);
+  --surface-border: rgba(30, 27, 58, 0.14);
+  --track-bg: rgba(30, 27, 58, 0.1);
+  --accent-text: #4f46e5;
+  --done-text: #047857;
+  --alert-text: #b91c1c;
+  --amber: #b45309;
+  --amber-deep: #b45309;
+  --score-red: #dc2626;
+  --score-cyan: #0e7490;
+  --score-green: #15803d;
+}
+
+[data-theme="light"] .score-red,
+[data-theme="light"] .score-amber,
+[data-theme="light"] .score-cyan,
+[data-theme="light"] .score-green {
+  text-shadow: none;
+}
+
 body {
-  background: #040410;
-  background-image: radial-gradient(circle at 15% 0%, rgba(99, 102, 241, 0.18), transparent 40%), radial-gradient(circle at 85% 15%, rgba(139, 92, 246, 0.12), transparent 45%);
+  background: var(--bg);
+  background-image: radial-gradient(circle at 15% 0%, var(--glow-1), transparent 40%), radial-gradient(circle at 85% 15%, var(--glow-2), transparent 45%);
   background-attachment: fixed;
-  color: #f1f5f9;
+  color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   min-height: 100vh;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .app {
@@ -40,7 +96,7 @@ body {
 
 .greeting {
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-muted);
   margin-top: 4px;
 }
 
@@ -55,14 +111,14 @@ body {
 
 .header-time {
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-muted);
   margin-top: 2px;
 }
 
-.score-red { color: #f87171; text-shadow: 0 0 16px rgba(248, 113, 113, 0.5); }
-.score-amber { color: #fbbf24; text-shadow: 0 0 16px rgba(251, 191, 36, 0.5); }
-.score-cyan { color: #22d3ee; text-shadow: 0 0 16px rgba(34, 211, 238, 0.5); }
-.score-green { color: #4ade80; text-shadow: 0 0 16px rgba(74, 222, 128, 0.5); }
+.score-red { color: var(--score-red); text-shadow: 0 0 16px rgba(248, 113, 113, 0.5); }
+.score-amber { color: var(--amber); text-shadow: 0 0 16px rgba(251, 191, 36, 0.5); }
+.score-cyan { color: var(--score-cyan); text-shadow: 0 0 16px rgba(34, 211, 238, 0.5); }
+.score-green { color: var(--score-green); text-shadow: 0 0 16px rgba(74, 222, 128, 0.5); }
 
 .tab-bar {
   display: flex;
@@ -87,7 +143,7 @@ body {
 }
 
 .tab-btn:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-bg);
 }
 
 .tab-icon {
@@ -96,7 +152,7 @@ body {
 
 .tab-label {
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-muted);
   font-weight: 600;
 }
 
@@ -107,7 +163,7 @@ body {
 }
 
 .tab-btn.active .tab-label {
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .tab-panel {
@@ -125,17 +181,17 @@ body {
 .tab-title {
   font-size: 18px;
   font-weight: 800;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .tab-subtitle {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--text-sub);
   margin-top: 2px;
 }
 
 .progress-bar {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--track-bg);
   border-radius: 6px;
   height: 6px;
   overflow: hidden;
@@ -156,11 +212,11 @@ form {
 }
 
 form input {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
   border-radius: 8px;
   padding: 10px 12px;
-  color: #f1f5f9;
+  color: var(--text);
   font-size: 13px;
   outline: none;
 }
@@ -188,7 +244,7 @@ form button {
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--text-sub);
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -198,8 +254,40 @@ form button {
 }
 
 .not-counted-tag {
-  color: #64748b;
+  color: var(--text-muted);
   font-style: italic;
+}
+
+.day-picker {
+  display: flex;
+  gap: 4px;
+  flex-basis: 100%;
+  margin: 2px 0 0;
+}
+
+.day-btn {
+  flex: 1;
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  color: var(--text-muted);
+  padding: 7px 0;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.day-btn.active {
+  background: linear-gradient(135deg, #e40048, #0700d2);
+  border-color: transparent;
+  color: #fff;
+}
+
+.day-picker-hint {
+  flex-basis: 100%;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
 }
 
 #task-icon {
@@ -218,8 +306,8 @@ form button {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: 14px;
   padding: 13px 14px;
   margin-bottom: 8px;
@@ -228,6 +316,10 @@ form button {
 .task-item.done {
   background: rgba(99, 102, 241, 0.13);
   border-color: rgba(99, 102, 241, 0.45);
+}
+
+.task-item.not-today {
+  opacity: 0.5;
 }
 
 .check-btn {
@@ -261,17 +353,17 @@ form button {
 .task-name {
   font-size: 13px;
   font-weight: 500;
-  color: #e2e8f0;
+  color: var(--text-soft);
 }
 
 .task-item.done .task-name {
   text-decoration: line-through;
-  color: #a5b4fc;
+  color: var(--accent-text);
 }
 
 .task-time {
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-muted);
   margin-top: 2px;
 }
 
@@ -290,7 +382,7 @@ form button {
 
 .empty {
   text-align: center;
-  color: #64748b;
+  color: var(--text-muted);
   font-style: italic;
   padding: 30px 0;
 }
@@ -308,8 +400,8 @@ form button {
 }
 
 .goal-item {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: 14px;
   padding: 14px;
   margin-bottom: 10px;
@@ -338,17 +430,17 @@ form button {
 .goal-name {
   font-size: 13px;
   font-weight: 500;
-  color: #e2e8f0;
+  color: var(--text-soft);
 }
 
 .goal-target-text {
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-muted);
   margin-top: 2px;
 }
 
 .goal-progress-bar {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--track-bg);
   border-radius: 6px;
   height: 6px;
   overflow: hidden;
@@ -371,7 +463,7 @@ form button {
 
 .goal-progress-text {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--text-sub);
 }
 
 .goal-controls {
@@ -382,9 +474,9 @@ form button {
 .goal-controls button {
   padding: 6px 10px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #f1f5f9;
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  color: var(--text);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -407,8 +499,8 @@ form button {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: 14px;
   padding: 13px 14px;
   margin-bottom: 8px;
@@ -450,24 +542,24 @@ form button {
 .habit-name {
   font-size: 13px;
   font-weight: 500;
-  color: #e2e8f0;
+  color: var(--text-soft);
 }
 
 .habit-item.done .habit-name {
   text-decoration: line-through;
-  color: #6ee7b7;
+  color: var(--done-text);
 }
 
 .habit-streak {
   font-size: 11px;
-  color: #f59e0b;
+  color: var(--amber-deep);
   margin-top: 2px;
   font-weight: 600;
 }
 
 .timer-box {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: 16px;
   padding: 24px;
   text-align: center;
@@ -475,7 +567,7 @@ form button {
 
 .timer-mode {
   font-size: 13px;
-  color: #64748b;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 8px;
@@ -484,7 +576,7 @@ form button {
 .timer-display {
   font-size: 48px;
   font-weight: 800;
-  color: #f1f5f9;
+  color: var(--text);
   margin-bottom: 20px;
 }
 
@@ -511,7 +603,7 @@ form button {
   gap: 20px;
   justify-content: center;
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .timer-settings label {
@@ -522,11 +614,11 @@ form button {
 
 .timer-settings input {
   width: 55px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
   border-radius: 6px;
   padding: 6px 8px;
-  color: #f1f5f9;
+  color: var(--text);
   font-size: 13px;
   outline: none;
 }
@@ -545,7 +637,7 @@ form button {
   font-size: 12px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: #a5b4fc;
+  color: var(--accent-text);
   margin-bottom: 10px;
 }
 
@@ -557,7 +649,7 @@ form button {
 .power-message {
   font-size: 13px;
   font-weight: 700;
-  color: #fbbf24;
+  color: var(--amber);
   margin-top: 8px;
   letter-spacing: 0.5px;
 }
@@ -570,8 +662,8 @@ form button {
 }
 
 .mini-score {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: 12px;
   padding: 12px;
   text-align: center;
@@ -579,22 +671,22 @@ form button {
 
 .mini-score-label {
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-muted);
   margin-bottom: 4px;
 }
 
 .mini-score-value {
   font-size: 18px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .slider-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: 14px;
   padding: 16px;
   margin-bottom: 16px;
@@ -602,12 +694,12 @@ form button {
 
 .slider-header {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--text-sub);
   margin-bottom: 8px;
 }
 
 .slider-header strong {
-  color: #f1f5f9;
+  color: var(--text);
   font-size: 14px;
 }
 
@@ -655,13 +747,13 @@ form button {
 
 .urgent-text {
   font-size: 13px;
-  color: #fecaca;
+  color: var(--alert-text);
   margin-bottom: 6px;
 }
 
 .urgent-fix {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--text-sub);
 }
 
 .history-stats {
@@ -672,8 +764,8 @@ form button {
 }
 
 .history-stat {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: 12px;
   padding: 12px;
   text-align: center;
@@ -681,19 +773,19 @@ form button {
 
 .history-stat-label {
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-muted);
   margin-bottom: 4px;
 }
 
 .history-stat-value {
   font-size: 18px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .history-row {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: 10px;
   padding: 10px 14px;
   margin-bottom: 6px;
@@ -707,11 +799,11 @@ form button {
 }
 
 .history-date {
-  color: #94a3b8;
+  color: var(--text-sub);
 }
 
 .history-score {
-  color: #f1f5f9;
+  color: var(--text);
   font-weight: 600;
 }
 
@@ -719,7 +811,7 @@ form button {
   display: flex;
   gap: 16px;
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .journey-toggle {
@@ -730,9 +822,9 @@ form button {
 
 .journey-toggle-btn {
   flex: 1;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #64748b;
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  color: var(--text-muted);
   padding: 8px;
   border-radius: 8px;
   font-size: 12px;
@@ -778,13 +870,13 @@ form button {
 
 .journey-bar-value {
   font-size: 10px;
-  color: #64748b;
+  color: var(--text-muted);
   margin-top: 6px;
 }
 
 .journey-bar-label {
   font-size: 10px;
-  color: #64748b;
+  color: var(--text-muted);
   margin-top: 2px;
 }
 
@@ -797,8 +889,8 @@ form button {
   align-items: flex-end;
   gap: 1px;
   height: 160px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: 10px;
   padding: 6px;
 }
@@ -818,7 +910,7 @@ form button {
 }
 
 .waveform-bar-fill.untracked {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--track-bg);
 }
 
 .waveform-labels {
@@ -831,19 +923,48 @@ form button {
   position: absolute;
   transform: translateX(-50%);
   font-size: 10px;
-  color: #64748b;
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
 .logic-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: 14px;
   padding: 16px;
   margin-bottom: 10px;
   font-size: 13px;
   line-height: 1.6;
-  color: #cbd5e1;
+  color: var(--text-logic);
+}
+
+.appearance-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.appearance-text {
+  font-size: 13px;
+  color: var(--text-sub);
+}
+
+#theme-toggle-btn {
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 .backup-box {
@@ -864,9 +985,9 @@ form button {
 }
 
 .import-label {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #f1f5f9;
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  color: var(--text);
   padding: 10px 16px;
   border-radius: 8px;
   cursor: pointer;
@@ -882,9 +1003,9 @@ form button {
   width: 100%;
   padding: 9px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #f1f5f9;
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  color: var(--text);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -893,13 +1014,14 @@ form button {
 .goal-check-btn.checked {
   background: linear-gradient(135deg, #10b981, #059669);
   border-color: transparent;
+  color: #fff;
 }
 
 .add-card-btn {
   width: 100%;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--card-bg);
   border: 1.5px dashed rgba(139, 92, 246, 0.4);
-  color: #a5b4fc;
+  color: var(--accent-text);
   padding: 14px;
   border-radius: 14px;
   font-weight: 700;
@@ -928,14 +1050,14 @@ form button {
 }
 
 .form-actions button[type="button"] {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #94a3b8;
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  color: var(--text-sub);
 }
 
 .milestone-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: 16px;
   padding: 18px;
   margin-bottom: 14px;
@@ -964,12 +1086,12 @@ form button {
 .milestone-name {
   font-size: 14px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .milestone-sub {
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-muted);
   margin-top: 2px;
 }
 
@@ -980,18 +1102,18 @@ form button {
 .milestone-percent {
   font-size: 24px;
   font-weight: 800;
-  color: #fbbf24;
+  color: var(--amber);
   margin-left: 4px;
 }
 
 .milestone-card.achieved .milestone-percent {
-  color: #4ade80;
+  color: var(--score-green);
 }
 
 .milestone-track {
   position: relative;
   height: 3px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--track-bg);
   border-radius: 2px;
   margin: 0 5px 10px;
 }
@@ -1018,7 +1140,7 @@ form button {
   height: 11px;
   border-radius: 50%;
   background: #334155;
-  border: 2px solid #0a0a16;
+  border: 2px solid var(--bg);
 }
 
 .milestone-dot.dot-first {
@@ -1044,7 +1166,7 @@ form button {
   justify-content: space-between;
   padding: 0 2px;
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .milestone-bottom {
@@ -1054,7 +1176,7 @@ form button {
 
 .milestone-remaining {
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .milestone-achieved {
@@ -1066,5 +1188,41 @@ form button {
   text-align: center;
   font-size: 13px;
   font-weight: 700;
-  color: #4ade80;
+  color: var(--score-green);
+}
+
+.undo-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%) translateY(16px);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #1a1a2e;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 50;
+}
+
+.undo-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+#undo-btn {
+  background: none;
+  border: none;
+  color: #a5b4fc;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
 }
