@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Daily Life Tracker</title>
   <link rel="stylesheet" href="style.css">
+  <script>
+    if (localStorage.getItem('theme') === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  </script>
 </head>
 <body>
   <div class="app">
@@ -114,6 +119,16 @@
           <div class="checkbox-row">
             <label class="checkbox-label"><input type="checkbox" id="task-count-progress" checked> Count in progress</label>
           </div>
+          <div class="day-picker" id="task-day-picker">
+            <button type="button" class="day-btn" data-day="1">Mon</button>
+            <button type="button" class="day-btn" data-day="2">Tue</button>
+            <button type="button" class="day-btn" data-day="3">Wed</button>
+            <button type="button" class="day-btn" data-day="4">Thu</button>
+            <button type="button" class="day-btn" data-day="5">Fri</button>
+            <button type="button" class="day-btn" data-day="6">Sat</button>
+            <button type="button" class="day-btn" data-day="0">Sun</button>
+          </div>
+          <div class="day-picker-hint">Pick the days it repeats on. Leave all unselected for every day.</div>
           <div class="form-actions">
             <button type="submit" id="task-submit-btn">Add</button>
             <button type="button" id="task-cancel-btn">Cancel</button>
@@ -255,6 +270,10 @@
         </div>
 
         <div class="logic-card">
+          <p>Routine tasks can repeat only on the days you pick, like Gym on Mon, Wed and Fri. On the other days that task is dimmed, marked 'not today' and left out of your score. Pick no days and it repeats every day.</p>
+        </div>
+
+        <div class="logic-card">
           <p>Not everything should count toward your score. 'Lunch at 1pm' isn't progress, but 'Study' is. Turn off 'Count in progress' for the boring stuff.</p>
         </div>
 
@@ -275,6 +294,15 @@
         </div>
 
         <div class="tab-header">
+          <div class="tab-title">Appearance</div>
+        </div>
+
+        <div class="appearance-box">
+          <span class="appearance-text">Switch between dark and light mode</span>
+          <button id="theme-toggle-btn"></button>
+        </div>
+
+        <div class="tab-header">
           <div class="tab-title">Backup Data</div>
         </div>
 
@@ -287,6 +315,11 @@
         </div>
       </section>
     </main>
+
+    <div class="undo-toast" id="undo-toast">
+      <span id="undo-toast-text"></span>
+      <button id="undo-btn">Undo</button>
+    </div>
   </div>
 
   <script src="script.js"></script>
