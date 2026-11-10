@@ -46,6 +46,56 @@ tabButtons.forEach(function (button) {
     });
 });
 
+let currentTheme = localStorage.getItem('theme') || 'dark';
+
+const themeToggleBtn = document.getElementById('theme-toggle-btn');
+
+function applyTheme() {
+    if (currentTheme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        themeToggleBtn.textContent = '\u{1F319} Dark';
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+        themeToggleBtn.textContent = '\u2600\ufe0f Light';
+    }
+}
+
+themeToggleBtn.addEventListener('click', function () {
+    currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+    localStorage.setItem('theme', currentTheme);
+    applyTheme();
+});
+
+applyTheme();
+
+let pendingDelete = null;
+let pendingDeleteTimeout = null;
+
+const undoToastEl = document.getElementById('undo-toast');
+const undoToastTextEl = document.getElementById('undo-toast-text');
+const undoBtn = document.getElementById('undo-btn');
+
+function hideUndoToast() {
+    clearTimeout(pendingDeleteTimeout);
+    undoToastEl.classList.remove('visible');
+    pendingDelete = null;
+}
+
+function showUndoToast(message, undoCallback) {
+    clearTimeout(pendingDeleteTimeout);
+    undoToastTextEl.textContent = message;
+    undoToastEl.classList.add('visible');
+    pendingDelete = undoCallback;
+    pendingDeleteTimeout = setTimeout(hideUndoToast, 5000);
+}
+
+undoBtn.addEventListener('click', function () {
+    if (pendingDelete) {
+        pendingDelete();
+    }
+    hideUndoToast();
+});
+
 function getTodayString() {
     const now = new Date();
     return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
@@ -56,6 +106,7 @@ const taskIconInput = document.getElementById('task-icon');
 const taskNameInput = document.getElementById('task-name');
 const taskTimeInput = document.getElementById('task-time');
 const taskCountProgressInput = document.getElementById('task-count-progress');
+const taskDayPicker = document.getElementById('task-day-picker');
 const taskSubmitBtn = document.getElementById('task-submit-btn');
 const taskAddToggle = document.getElementById('task-add-toggle');
 const taskCancelBtn = document.getElementById('task-cancel-btn');
@@ -65,6 +116,43 @@ const taskList = document.getElementById('task-list');
 
 let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 let editingTaskId = null;
+let taskSelectedDays = [];
+
+tasks.forEach(function (t) {
+    if (!t.days) {
+        t.days = [];
+    }
+});
+
+function isTaskForToday(task) {
+    if (!task.days || task.days.length === 0) {
+        return true;
+    }
+    return task.days.indexOf(new Date().getDay()) !== -1;
+}
+
+function setTaskDayPicker(days) {
+    taskSelectedDays = days.slice();
+    taskDayPicker.querySelectorAll('.day-btn').forEach(function (btn) {
+        const day = Number(btn.getAttribute('data-day'));
+        btn.classList.toggle('active', taskSelectedDays.indexOf(day) !== -1);
+    });
+}
+
+taskDayPicker.querySelectorAll('.day-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        const day = Number(btn.getAttribute('data-day'));
+        const index = taskSelectedDays.indexOf(day);
+
+        if (index === -1) {
+            taskSelectedDays.push(day);
+            btn.classList.add('active');
+        } else {
+            taskSelectedDays.splice(index, 1);
+            btn.classList.remove('active');
+        }
+    });
+});
 
 function openTaskForm() {
     taskForm.classList.remove('add-form-hidden');
@@ -75,6 +163,7 @@ function closeTaskForm() {
     taskForm.classList.add('add-form-hidden');
     taskAddToggle.style.display = 'block';
     taskForm.reset();
+    setTaskDayPicker([]);
     editingTaskId = null;
     taskSubmitBtn.textContent = 'Add';
 }
@@ -86,10 +175,15 @@ function renderRoutine() {
     taskList.innerHTML = '';
 
     const today = getTodayString();
-    const doneToday = tasks.filter(function (t) { return t.completedDates.indexOf(today) !== -1; }).length;
-    const percent = tasks.length > 0 ? Math.round((doneToday / tasks.length) * 100) : 0;
+    const todaysTasks = tasks.filter(isTaskForToday);
+    const doneToday = todaysTasks.filter(function (t) { return t.completedDates.indexOf(today) !== -1; }).length;
+    const percent = todaysTasks.length > 0 ? Math.round((doneToday / todaysTasks.length) * 100) : 0;
 
-    routineSubtitle.textContent = doneToday + '/' + tasks.length + ' done \u00b7 ' + getShortDate();
+    if (todaysTasks.length === 0) {
+        routineSubtitle.textContent = 'Nothing scheduled today \u00b7 ' + getShortDate();
+    } else {
+        routineSubtitle.textContent = doneToday + '/' + todaysTasks.length + ' done \u00b7 ' + getShortDate();
+    }
     routineProgressFill.style.width = percent + '%';
 
     if (tasks.length === 0) {
@@ -98,15 +192,16 @@ function renderRoutine() {
         tasks.forEach(function (task) {
             const isDone = task.completedDates.indexOf(today) !== -1;
             const notCounted = task.countInProgress === false;
+            const scheduledToday = isTaskForToday(task);
 
             const taskDiv = document.createElement('div');
-            taskDiv.className = 'task-item' + (isDone ? ' done' : '');
+            taskDiv.className = 'task-item' + (isDone ? ' done' : '') + (scheduledToday ? '' : ' not-today');
             taskDiv.innerHTML = `
                 <button class="check-btn" onclick="toggleTask(${task.id})">${isDone ? '\u2713' : ''}</button>
                 <div class="task-icon">${task.icon}</div>
                 <div class="task-info">
                     <div class="task-name">${task.name}</div>
-                    <div class="task-time">${task.time}${notCounted ? ' <span class="not-counted-tag">not counted</span>' : ''}</div>
+                    <div class="task-time">${task.time}${notCounted ? ' <span class="not-counted-tag">not counted</span>' : ''}${scheduledToday ? '' : ' <span class="not-counted-tag">not today</span>'}</div>
                 </div>
                 <button class="icon-btn" onclick="editTask(${task.id})">\u270f\ufe0f</button>
                 <button class="icon-btn" onclick="deleteTask(${task.id})">\u{1F5D1}\ufe0f</button>
@@ -139,6 +234,7 @@ function editTask(id) {
     taskNameInput.value = task.name;
     taskTimeInput.value = task.time;
     taskCountProgressInput.checked = task.countInProgress !== false;
+    setTaskDayPicker(task.days || []);
     editingTaskId = id;
     taskSubmitBtn.textContent = 'Save';
     openTaskForm();
@@ -146,10 +242,8 @@ function editTask(id) {
 }
 
 function deleteTask(id) {
-    const confirmed = confirm('Delete this task? This cannot be undone.');
-    if (!confirmed) {
-        return;
-    }
+    const task = tasks.find(function (t) { return t.id === id; });
+    const index = tasks.indexOf(task);
 
     tasks = tasks.filter(function (t) { return t.id !== id; });
     localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -159,6 +253,12 @@ function deleteTask(id) {
     }
 
     renderRoutine();
+
+    showUndoToast('Task deleted.', function () {
+        tasks.splice(index, 0, task);
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+        renderRoutine();
+    });
 }
 
 taskForm.addEventListener('submit', function (e) {
@@ -170,6 +270,7 @@ taskForm.addEventListener('submit', function (e) {
         task.name = taskNameInput.value;
         task.time = taskTimeInput.value;
         task.countInProgress = taskCountProgressInput.checked;
+        task.days = taskSelectedDays.slice();
     } else {
         tasks.push({
             id: Date.now(),
@@ -177,6 +278,7 @@ taskForm.addEventListener('submit', function (e) {
             name: taskNameInput.value,
             time: taskTimeInput.value,
             countInProgress: taskCountProgressInput.checked,
+            days: taskSelectedDays.slice(),
             completedDates: []
         });
     }
@@ -405,10 +507,8 @@ function editGoal(id) {
 }
 
 function deleteGoal(id) {
-    const confirmed = confirm('Delete this goal? This cannot be undone.');
-    if (!confirmed) {
-        return;
-    }
+    const goal = goals.find(function (g) { return g.id === id; });
+    const index = goals.indexOf(goal);
 
     goals = goals.filter(function (g) { return g.id !== id; });
     localStorage.setItem('goals', JSON.stringify(goals));
@@ -418,6 +518,12 @@ function deleteGoal(id) {
     }
 
     renderGoals();
+
+    showUndoToast('Goal deleted.', function () {
+        goals.splice(index, 0, goal);
+        localStorage.setItem('goals', JSON.stringify(goals));
+        renderGoals();
+    });
 }
 
 goalForm.addEventListener('submit', function (e) {
@@ -579,10 +685,8 @@ function editHabit(id) {
 }
 
 function deleteHabit(id) {
-    const confirmed = confirm('Delete this habit? This cannot be undone.');
-    if (!confirmed) {
-        return;
-    }
+    const habit = habits.find(function (h) { return h.id === id; });
+    const index = habits.indexOf(habit);
 
     habits = habits.filter(function (h) { return h.id !== id; });
     localStorage.setItem('habits', JSON.stringify(habits));
@@ -592,6 +696,12 @@ function deleteHabit(id) {
     }
 
     renderHabits();
+
+    showUndoToast('Habit deleted.', function () {
+        habits.splice(index, 0, habit);
+        localStorage.setItem('habits', JSON.stringify(habits));
+        renderHabits();
+    });
 }
 
 habitForm.addEventListener('submit', function (e) {
@@ -726,7 +836,7 @@ function getOverallScore() {
     const scores = [];
 
     let routinePercent = 0;
-    const countedTasks = tasks.filter(function (t) { return t.countInProgress !== false; });
+    const countedTasks = tasks.filter(function (t) { return t.countInProgress !== false && isTaskForToday(t); });
     if (countedTasks.length > 0) {
         const doneToday = countedTasks.filter(function (t) { return t.completedDates.indexOf(today) !== -1; }).length;
         routinePercent = Math.round((doneToday / countedTasks.length) * 100);
@@ -1234,6 +1344,12 @@ importInput.addEventListener('change', function () {
             scoreHistory = data.scoreHistory || {};
             goalJourneys = data.goalJourneys || [];
 
+            tasks.forEach(function (t) {
+                if (!t.days) {
+                    t.days = [];
+                }
+            });
+
             goals.forEach(function (g) {
                 if (!g.type) {
                     g.type = g.resetsDaily ? 'daily_quota' : 'lifetime';
@@ -1254,6 +1370,8 @@ importInput.addEventListener('change', function () {
             localStorage.setItem('dailyState', JSON.stringify(dailyState));
             localStorage.setItem('scoreHistory', JSON.stringify(scoreHistory));
             localStorage.setItem('goalJourneys', JSON.stringify(goalJourneys));
+
+            hideUndoToast();
 
             document.getElementById('greeting').textContent = '\u{1F464} ' + userName + ' \u00b7 ' + getFormattedDate();
             renderRoutine();
