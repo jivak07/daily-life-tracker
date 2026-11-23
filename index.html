@@ -47,13 +47,9 @@
         <span class="tab-icon">⏱️</span>
         <span class="tab-label">Pomodoro</span>
       </button>
-      <button class="tab-btn" data-tab="history">
-        <span class="tab-icon">📜</span>
-        <span class="tab-label">History</span>
-      </button>
-      <button class="tab-btn" data-tab="journey">
-        <span class="tab-icon">📈</span>
-        <span class="tab-label">Journey</span>
+      <button class="tab-btn" data-tab="profile">
+        <span class="tab-icon">👤</span>
+        <span class="tab-label">Profile</span>
       </button>
       <button class="tab-btn" data-tab="logic">
         <span class="tab-icon">📊</span>
@@ -63,6 +59,8 @@
 
     <main class="tab-content">
       <section id="overview" class="tab-panel active">
+        <div id="backup-reminder-container"></div>
+
         <div class="power-card">
           <div class="power-label">Today's Power Level</div>
           <div class="power-value" id="power-value">0%</div>
@@ -213,6 +211,8 @@
       </section>
 
       <section id="history" class="tab-panel">
+        <button class="back-btn" id="history-back-btn">← Back to Profile</button>
+
         <div class="tab-header">
           <div class="tab-title">History</div>
           <div class="tab-subtitle">Your tracked days</div>
@@ -237,6 +237,8 @@
       </section>
 
       <section id="journey" class="tab-panel">
+        <button class="back-btn" id="journey-back-btn">← Back to Profile</button>
+
         <div class="tab-header">
           <div class="tab-title">Journey</div>
           <div class="tab-subtitle">Your progress over time</div>
@@ -260,6 +262,58 @@
         <div id="goal-journey-list"></div>
       </section>
 
+      <section id="all-achievements" class="tab-panel">
+        <button class="back-btn" id="all-achievements-back-btn">← Back to Profile</button>
+
+        <div class="tab-header">
+          <div class="tab-title">All Achievements</div>
+          <div class="tab-subtitle" id="all-achievements-subtitle"></div>
+        </div>
+
+        <div class="tab-header">
+          <div class="tab-title">Achieved</div>
+        </div>
+        <div class="achievements-grid" id="achieved-grid"></div>
+
+        <div class="tab-header">
+          <div class="tab-title">Not Achieved</div>
+        </div>
+        <div class="achievements-grid" id="not-achieved-grid"></div>
+      </section>
+
+      <section id="profile" class="tab-panel">
+        <div class="tab-header">
+          <div class="tab-title">Profile</div>
+        </div>
+
+        <div class="profile-name" id="profile-name"></div>
+
+        <div class="profile-stats">
+          <div class="profile-stat">
+            <div class="profile-stat-label">Member Since</div>
+            <div class="profile-stat-value" id="profile-joined"></div>
+          </div>
+          <div class="profile-stat">
+            <div class="profile-stat-label">Times Opened</div>
+            <div class="profile-stat-value" id="profile-logins"></div>
+          </div>
+        </div>
+
+        <div class="profile-links">
+          <button id="open-history-btn">📜 History</button>
+          <button id="open-journey-btn">📈 Journey</button>
+        </div>
+
+        <div class="tab-header">
+          <div class="tab-title">Earned Achievements</div>
+          <div class="tab-subtitle" id="achievements-subtitle"></div>
+        </div>
+
+        <div class="achievements-grid" id="achievements-grid"></div>
+
+        <button class="view-all-btn" id="view-all-achievements-btn">View All Achievements</button>
+      </section>
+
       <section id="logic" class="tab-panel">
         <div class="tab-header">
           <div class="tab-title">Get Know Here, How It Works</div>
@@ -278,15 +332,23 @@
         </div>
 
         <div class="logic-card">
-          <p>Pin the goals that really matter, like:- a race you're training for, a reading streak and they get their own progress line with checkpoints in Journey Tab. Hit the target and it turns green with a finish banner. Delete the goal later and it stays frozen there, until you clear (delete manually) it from Journey yourself.</p>
+          <p>Pin the goals that really matter, like:- a race you're training for, a reading streak and they get their own progress line with checkpoints in Journey, which now opens from inside your Profile tab. Hit the target and it turns green with a finish banner. Delete the goal later and it stays frozen there, until you clear (delete manually) it from Journey yourself.</p>
         </div>
 
         <div class="logic-card">
-          <p>Pin the goals that really matter, like:- a race you're training for, a reading streak, and they get their own chart in Journey Tab. Delete the goal later and the chart stays, until you clear it from Journey yourself.</p>
+          <p>Pin the goals that really matter, like:- a race you're training for, a reading streak, and they get their own chart in Journey, which now opens from inside your Profile tab. Delete the goal later and the chart stays, until you clear it from Journey yourself.</p>
         </div>
 
         <div class="logic-card">
           <p>Streak = days in a row you did a habit. Miss a day, it drops to 0. Start again next time you check it off.</p>
+        </div>
+
+        <div class="logic-card">
+          <p>Achievements unlock themselves the moment you qualify, a 7-day streak, hitting a goal, a perfect 100% day. The moment you earn one, a small pop-up tells you right away, and it then shows up in your Profile tab. Tap 'View All Achievements' there to see the full list, split into what you've achieved and what's still left.</p>
+        </div>
+
+        <div class="logic-card">
+          <p>You wanna see History and Journey they live inside Profile Tab. Open the one you want from the buttons there, and track your progress.</p>
         </div>
 
         <div class="logic-card">
@@ -319,6 +381,15 @@
     <div class="undo-toast" id="undo-toast">
       <span id="undo-toast-text"></span>
       <button id="undo-btn">Undo</button>
+    </div>
+
+    <div class="achievement-popup" id="achievement-popup">
+      <div class="achievement-popup-icon" id="achievement-popup-icon"></div>
+      <div class="achievement-popup-text">
+        <div class="achievement-popup-title" id="achievement-popup-title"></div>
+        <div class="achievement-popup-message" id="achievement-popup-message"></div>
+      </div>
+      <button class="achievement-popup-close" id="achievement-popup-close">✕</button>
     </div>
   </div>
 
