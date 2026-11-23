@@ -16,34 +16,101 @@ function getShortDate() {
     return now.toLocaleDateString('en', options);
 }
 
-document.getElementById('greeting').textContent = '\u{1F464} ' + userName + ' \u00b7 ' + getFormattedDate();
+function getTodayString() {
+    const now = new Date();
+    return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+}
+
+let loginCount = Number(localStorage.getItem('loginCount')) || 0;
+loginCount++;
+localStorage.setItem('loginCount', loginCount);
+
+let loginDays = JSON.parse(localStorage.getItem('loginDays')) || [];
+if (loginDays.indexOf(getTodayString()) === -1) {
+    loginDays.push(getTodayString());
+    localStorage.setItem('loginDays', JSON.stringify(loginDays));
+}
+
+let joinDate = localStorage.getItem('joinDate');
+if (!joinDate) {
+    joinDate = getTodayString();
+    localStorage.setItem('joinDate', joinDate);
+}
+
+function getDaysSinceJoin() {
+    const joined = new Date(joinDate);
+    const diffMs = Date.now() - joined.getTime();
+    return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+}
+
+document.getElementById('greeting').textContent = getFormattedDate();
 
 const tabButtons = document.querySelectorAll('.tab-btn');
 const tabPanels = document.querySelectorAll('.tab-panel');
 
+function switchToTab(targetTab) {
+    tabButtons.forEach(function (btn) { btn.classList.remove('active'); });
+    tabPanels.forEach(function (panel) { panel.classList.remove('active'); });
+
+    const matchingNavButton = document.querySelector('.tab-btn[data-tab="' + targetTab + '"]');
+    if (matchingNavButton) {
+        matchingNavButton.classList.add('active');
+    }
+    document.getElementById(targetTab).classList.add('active');
+
+    if (targetTab === 'overview') {
+        renderOverview();
+    }
+
+    if (targetTab === 'history') {
+        renderHistory();
+    }
+
+    if (targetTab === 'journey') {
+        renderJourney();
+        renderGoalJourneys();
+    }
+
+    if (targetTab === 'profile') {
+        checkAchievements();
+        renderProfile();
+        renderAchievements();
+    }
+
+    if (targetTab === 'all-achievements') {
+        checkAchievements();
+        renderAllAchievements();
+    }
+}
+
 tabButtons.forEach(function (button) {
     button.addEventListener('click', function () {
-        const targetTab = button.getAttribute('data-tab');
-
-        tabButtons.forEach(function (btn) { btn.classList.remove('active'); });
-        tabPanels.forEach(function (panel) { panel.classList.remove('active'); });
-
-        button.classList.add('active');
-        document.getElementById(targetTab).classList.add('active');
-
-        if (targetTab === 'overview') {
-            renderOverview();
-        }
-
-        if (targetTab === 'history') {
-            renderHistory();
-        }
-
-        if (targetTab === 'journey') {
-            renderJourney();
-            renderGoalJourneys();
-        }
+        switchToTab(button.getAttribute('data-tab'));
     });
+});
+
+document.getElementById('open-history-btn').addEventListener('click', function () {
+    switchToTab('history');
+});
+
+document.getElementById('open-journey-btn').addEventListener('click', function () {
+    switchToTab('journey');
+});
+
+document.getElementById('history-back-btn').addEventListener('click', function () {
+    switchToTab('profile');
+});
+
+document.getElementById('journey-back-btn').addEventListener('click', function () {
+    switchToTab('profile');
+});
+
+document.getElementById('view-all-achievements-btn').addEventListener('click', function () {
+    switchToTab('all-achievements');
+});
+
+document.getElementById('all-achievements-back-btn').addEventListener('click', function () {
+    switchToTab('profile');
 });
 
 let currentTheme = localStorage.getItem('theme') || 'dark';
@@ -53,10 +120,10 @@ const themeToggleBtn = document.getElementById('theme-toggle-btn');
 function applyTheme() {
     if (currentTheme === 'light') {
         document.documentElement.setAttribute('data-theme', 'light');
-        themeToggleBtn.textContent = '\u{1F319} Dark';
+        themeToggleBtn.textContent = '🌙 Dark';
     } else {
         document.documentElement.removeAttribute('data-theme');
-        themeToggleBtn.textContent = '\u2600\ufe0f Light';
+        themeToggleBtn.textContent = '☀️ Light';
     }
 }
 
@@ -96,10 +163,30 @@ undoBtn.addEventListener('click', function () {
     hideUndoToast();
 });
 
-function getTodayString() {
-    const now = new Date();
-    return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+const achievementPopupEl = document.getElementById('achievement-popup');
+const achievementPopupIconEl = document.getElementById('achievement-popup-icon');
+const achievementPopupTitleEl = document.getElementById('achievement-popup-title');
+const achievementPopupMessageEl = document.getElementById('achievement-popup-message');
+const achievementPopupCloseBtn = document.getElementById('achievement-popup-close');
+
+function showAchievementPopup(newlyUnlockedList) {
+    let message;
+    if (newlyUnlockedList.length === 1) {
+        message = 'You just unlocked: ' + newlyUnlockedList[0].name;
+    } else {
+        message = 'You just unlocked ' + newlyUnlockedList.length + ' achievements!';
+    }
+
+    achievementPopupTitleEl.textContent = 'Congrats, ' + userName + '!';
+    achievementPopupMessageEl.textContent = message;
+    achievementPopupIconEl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + newlyUnlockedList[0].icon + '</svg>';
+
+    achievementPopupEl.classList.add('visible');
 }
+
+achievementPopupCloseBtn.addEventListener('click', function () {
+    achievementPopupEl.classList.remove('visible');
+});
 
 const taskForm = document.getElementById('task-form');
 const taskIconInput = document.getElementById('task-icon');
@@ -180,9 +267,9 @@ function renderRoutine() {
     const percent = todaysTasks.length > 0 ? Math.round((doneToday / todaysTasks.length) * 100) : 0;
 
     if (todaysTasks.length === 0) {
-        routineSubtitle.textContent = 'Nothing scheduled today \u00b7 ' + getShortDate();
+        routineSubtitle.textContent = 'Nothing scheduled today · ' + getShortDate();
     } else {
-        routineSubtitle.textContent = doneToday + '/' + todaysTasks.length + ' done \u00b7 ' + getShortDate();
+        routineSubtitle.textContent = doneToday + '/' + todaysTasks.length + ' done · ' + getShortDate();
     }
     routineProgressFill.style.width = percent + '%';
 
@@ -197,14 +284,14 @@ function renderRoutine() {
             const taskDiv = document.createElement('div');
             taskDiv.className = 'task-item' + (isDone ? ' done' : '') + (scheduledToday ? '' : ' not-today');
             taskDiv.innerHTML = `
-                <button class="check-btn" onclick="toggleTask(${task.id})">${isDone ? '\u2713' : ''}</button>
+                <button class="check-btn" onclick="toggleTask(${task.id})">${isDone ? '✓' : ''}</button>
                 <div class="task-icon">${task.icon}</div>
                 <div class="task-info">
                     <div class="task-name">${task.name}</div>
                     <div class="task-time">${task.time}${notCounted ? ' <span class="not-counted-tag">not counted</span>' : ''}${scheduledToday ? '' : ' <span class="not-counted-tag">not today</span>'}</div>
                 </div>
-                <button class="icon-btn" onclick="editTask(${task.id})">\u270f\ufe0f</button>
-                <button class="icon-btn" onclick="deleteTask(${task.id})">\u{1F5D1}\ufe0f</button>
+                <button class="icon-btn" onclick="editTask(${task.id})">✏️</button>
+                <button class="icon-btn" onclick="deleteTask(${task.id})">🗑️</button>
             `;
             taskList.appendChild(taskDiv);
         });
@@ -266,7 +353,7 @@ taskForm.addEventListener('submit', function (e) {
 
     if (editingTaskId !== null) {
         const task = tasks.find(function (t) { return t.id === editingTaskId; });
-        task.icon = taskIconInput.value.trim() || '\u2022';
+        task.icon = taskIconInput.value.trim() || '•';
         task.name = taskNameInput.value;
         task.time = taskTimeInput.value;
         task.countInProgress = taskCountProgressInput.checked;
@@ -274,7 +361,7 @@ taskForm.addEventListener('submit', function (e) {
     } else {
         tasks.push({
             id: Date.now(),
-            icon: taskIconInput.value.trim() || '\u2022',
+            icon: taskIconInput.value.trim() || '•',
             name: taskNameInput.value,
             time: taskTimeInput.value,
             countInProgress: taskCountProgressInput.checked,
@@ -427,7 +514,7 @@ function renderGoals() {
             typeLabel = 'daily check-off';
             progressLabel = amount + '/' + goal.target + ' days (' + percent + '%)';
             const doneToday = goal.completedDates.indexOf(today) !== -1;
-            controlsHtml = `<button class="goal-check-btn${doneToday ? ' checked' : ''}" onclick="toggleGoalDay(${goal.id})">${doneToday ? '\u2713 Done today' : 'Mark today done'}</button>`;
+            controlsHtml = `<button class="goal-check-btn${doneToday ? ' checked' : ''}" onclick="toggleGoalDay(${goal.id})">${doneToday ? '✓ Done today' : 'Mark today done'}</button>`;
         } else if (goal.type === 'daily_quota') {
             typeLabel = 'daily quota';
             progressLabel = amount + '/' + goal.target + ' ' + goal.unit + ' today (' + percent + '%)';
@@ -440,10 +527,10 @@ function renderGoals() {
                 <div class="goal-icon">${goal.icon}</div>
                 <div class="goal-info">
                     <div class="goal-name">${goal.name}</div>
-                    <div class="goal-target-text">Target: ${goal.target} \u00b7 ${typeLabel}${notCounted ? ' <span class="not-counted-tag">not counted</span>' : ''}</div>
+                    <div class="goal-target-text">Target: ${goal.target} · ${typeLabel}${notCounted ? ' <span class="not-counted-tag">not counted</span>' : ''}</div>
                 </div>
-                <button class="icon-btn" onclick="editGoal(${goal.id})">\u270f\ufe0f</button>
-                <button class="icon-btn" onclick="deleteGoal(${goal.id})">\u{1F5D1}\ufe0f</button>
+                <button class="icon-btn" onclick="editGoal(${goal.id})">✏️</button>
+                <button class="icon-btn" onclick="deleteGoal(${goal.id})">🗑️</button>
             </div>
             <div class="goal-progress-bar">
                 <div class="goal-progress-fill" style="width: ${percent}%"></div>
@@ -534,7 +621,7 @@ goalForm.addEventListener('submit', function (e) {
 
     if (editingGoalId !== null) {
         activeGoal = goals.find(function (g) { return g.id === editingGoalId; });
-        activeGoal.icon = goalIconInput.value.trim() || '\u2022';
+        activeGoal.icon = goalIconInput.value.trim() || '•';
         activeGoal.name = goalNameInput.value;
         activeGoal.target = Number(goalTargetInput.value);
         activeGoal.unit = goalUnitInput.value;
@@ -551,7 +638,7 @@ goalForm.addEventListener('submit', function (e) {
     } else {
         activeGoal = {
             id: Date.now(),
-            icon: goalIconInput.value.trim() || '\u2022',
+            icon: goalIconInput.value.trim() || '•',
             name: goalNameInput.value,
             target: Number(goalTargetInput.value),
             unit: goalUnitInput.value,
@@ -636,20 +723,20 @@ function renderHabits() {
         habits.forEach(function (habit) {
             const isDone = habit.completedDates.indexOf(today) !== -1;
             const streak = calculateStreak(habit);
-            const streakText = streak > 0 ? '\u{1F525} ' + streak + ' day streak!' : 'No streak yet';
+            const streakText = streak > 0 ? '🔥 ' + streak + ' day streak!' : 'No streak yet';
             const notCounted = habit.countInProgress === false;
 
             const habitDiv = document.createElement('div');
             habitDiv.className = 'habit-item' + (isDone ? ' done' : '');
             habitDiv.innerHTML = `
-                <button class="habit-check-btn" onclick="toggleHabit(${habit.id})">${isDone ? '\u2713' : ''}</button>
+                <button class="habit-check-btn" onclick="toggleHabit(${habit.id})">${isDone ? '✓' : ''}</button>
                 <div class="habit-icon">${habit.icon}</div>
                 <div class="habit-info">
                     <div class="habit-name">${habit.name}</div>
                     <div class="habit-streak">${streakText}${notCounted ? ' <span class="not-counted-tag">not counted</span>' : ''}</div>
                 </div>
-                <button class="icon-btn" onclick="editHabit(${habit.id})">\u270f\ufe0f</button>
-                <button class="icon-btn" onclick="deleteHabit(${habit.id})">\u{1F5D1}\ufe0f</button>
+                <button class="icon-btn" onclick="editHabit(${habit.id})">✏️</button>
+                <button class="icon-btn" onclick="deleteHabit(${habit.id})">🗑️</button>
             `;
             habitList.appendChild(habitDiv);
         });
@@ -709,13 +796,13 @@ habitForm.addEventListener('submit', function (e) {
 
     if (editingHabitId !== null) {
         const habit = habits.find(function (h) { return h.id === editingHabitId; });
-        habit.icon = habitIconInput.value.trim() || '\u2022';
+        habit.icon = habitIconInput.value.trim() || '•';
         habit.name = habitNameInput.value;
         habit.countInProgress = habitCountProgressInput.checked;
     } else {
         habits.push({
             id: Date.now(),
-            icon: habitIconInput.value.trim() || '\u2022',
+            icon: habitIconInput.value.trim() || '•',
             name: habitNameInput.value,
             countInProgress: habitCountProgressInput.checked,
             completedDates: []
@@ -753,6 +840,26 @@ function getMinutesValue(inputEl, fallback) {
     return value > 0 ? value : fallback;
 }
 
+function playBeep(frequency) {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        oscillator.type = 'sine';
+        oscillator.frequency.value = frequency;
+        gainNode.gain.value = 0.15;
+
+        oscillator.start();
+        oscillator.stop(ctx.currentTime + 0.3);
+    } catch (error) {
+        return;
+    }
+}
+
 function updateTimerDisplay() {
     timerDisplayEl.textContent = formatTime(timerSecondsLeft);
     timerModeEl.textContent = timerMode === 'focus' ? 'Focus' : 'Break';
@@ -769,11 +876,14 @@ function switchTimerMode() {
     if (timerMode === 'focus') {
         sessionLog[today] = (sessionLog[today] || 0) + 1;
         localStorage.setItem('sessionLog', JSON.stringify(sessionLog));
+        checkAchievements();
         timerMode = 'break';
         timerSecondsLeft = getMinutesValue(breakMinutesInput, 5) * 60;
+        playBeep(660);
     } else {
         timerMode = 'focus';
         timerSecondsLeft = getMinutesValue(focusMinutesInput, 25) * 60;
+        playBeep(880);
     }
 }
 
@@ -866,15 +976,15 @@ function getOverallScore() {
 
 function getPowerMessage(score) {
     if (score >= 76) {
-        return 'ABSOLUTE LEGEND! \u{1F3C6}';
+        return 'ABSOLUTE LEGEND! 🏆';
     }
     if (score >= 51) {
-        return 'ON FIRE TODAY \u{1F525}';
+        return 'ON FIRE TODAY 🔥';
     }
     if (score >= 26) {
         return 'KEEP PUSHING!';
     }
-    return 'LET\u2019S GOOO, START NOW!';
+    return 'LET’S GOOO, START NOW!';
 }
 
 function getScoreColorClass(score) {
@@ -900,6 +1010,7 @@ function updateHeaderScore() {
 
     logTodayScore(result.overall);
     updatePinnedGoalJourneys();
+    checkAchievements();
 }
 
 function logTodayScore(overall) {
@@ -944,6 +1055,36 @@ function renderUrgentCard() {
     `;
 }
 
+function getDaysSinceExport() {
+    const lastExport = localStorage.getItem('lastExportTime');
+    if (!lastExport) {
+        return Infinity;
+    }
+    const diffMs = Date.now() - Number(lastExport);
+    return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+}
+
+function renderBackupReminder() {
+    const container = document.getElementById('backup-reminder-container');
+    const daysSince = getDaysSinceExport();
+
+    if (daysSince < 7) {
+        container.innerHTML = '';
+        return;
+    }
+
+    const message = daysSince === Infinity
+        ? 'You haven’t exported your data yet.'
+        : daysSince + ' days since your last export.';
+
+    container.innerHTML = `
+        <div class="backup-reminder-card">
+            <div class="backup-reminder-text">💾 ${message} Everything lives only on this device.</div>
+            <button class="backup-reminder-btn" onclick="exportData()">Export Now</button>
+        </div>
+    `;
+}
+
 function renderOverview() {
     const result = getOverallScore();
     const colorClass = getScoreColorClass(result.overall);
@@ -963,6 +1104,7 @@ function renderOverview() {
     energyDisplayEl.textContent = state.energy;
 
     renderUrgentCard();
+    renderBackupReminder();
     updateHeaderScore();
 }
 
@@ -982,7 +1124,7 @@ energySlider.addEventListener('input', function () {
 
 shareBtn.addEventListener('click', function () {
     const result = getOverallScore();
-    const summary = 'My Daily Life Tracker report \u2014 ' + getShortDate() + '\nOverall: ' + result.overall + '%\nRoutine: ' + result.routinePercent + '%\nHabits: ' + result.habitPercent + '%\nGoals: ' + result.goalPercent + '%';
+    const summary = 'My Daily Life Tracker report — ' + getShortDate() + '\nOverall: ' + result.overall + '%\nRoutine: ' + result.routinePercent + '%\nHabits: ' + result.habitPercent + '%\nGoals: ' + result.goalPercent + '%';
 
     if (navigator.clipboard) {
         navigator.clipboard.writeText(summary).then(function () {
@@ -1029,8 +1171,8 @@ function renderHistory() {
 
     dates.forEach(function (date) {
         const state = dailyState[date];
-        const moodText = state ? state.mood + '/10' : '\u2013';
-        const energyText = state ? state.energy + '/10' : '\u2013';
+        const moodText = state ? state.mood + '/10' : '–';
+        const energyText = state ? state.energy + '/10' : '–';
         const sessionsText = sessionLog[date] || 0;
 
         const row = document.createElement('div');
@@ -1041,9 +1183,9 @@ function renderHistory() {
                 <span class="history-score">${scoreHistory[date]}%</span>
             </div>
             <div class="history-row-detail">
-                <span>\u{1F60A} ${moodText}</span>
-                <span>\u26a1 ${energyText}</span>
-                <span>\u23f1\ufe0f ${sessionsText} sessions</span>
+                <span>😊 ${moodText}</span>
+                <span>⚡ ${energyText}</span>
+                <span>⏱️ ${sessionsText} sessions</span>
             </div>
         `;
         historyList.appendChild(row);
@@ -1268,7 +1410,7 @@ function renderGoalJourneys() {
                 posClass = ' dot-last';
             }
             dotsHtml += '<div class="milestone-dot' + posClass + (filled ? ' filled' : '') + '" style="left: ' + cp + '%"></div>';
-            labelsHtml += '<span>' + (cp === 100 ? '\u{1F3C6}' : cp + '%') + '</span>';
+            labelsHtml += '<span>' + (cp === 100 ? '🏆' : cp + '%') + '</span>';
         });
 
         const card = document.createElement('div');
@@ -1280,7 +1422,7 @@ function renderGoalJourneys() {
                     <div class="milestone-name">${entry.name}${entry.active ? '' : ' <span class="not-counted-tag">goal removed</span>'}</div>
                     <div class="milestone-sub">${subtitle}</div>
                 </div>
-                <button class="icon-btn milestone-remove" onclick="removeGoalJourneyEntry(${entry.id})">\u{1F5D1}\ufe0f</button>
+                <button class="icon-btn milestone-remove" onclick="removeGoalJourneyEntry(${entry.id})">🗑️</button>
                 <div class="milestone-percent">${percent}%</div>
             </div>
             <div class="milestone-track">
@@ -1289,19 +1431,138 @@ function renderGoalJourneys() {
             </div>
             <div class="milestone-labels">${labelsHtml}</div>
             ${isAchieved
-                ? '<div class="milestone-achieved">\u{1F389} GOAL ACHIEVED!</div>'
+                ? '<div class="milestone-achieved">🎉 GOAL ACHIEVED!</div>'
                 : '<div class="milestone-bottom"><span class="milestone-remaining">' + remaining + ' more to go</span></div>'}
         `;
         container.appendChild(card);
     });
 }
 
+function renderProfile() {
+    document.getElementById('profile-name').textContent = '👤 ' + userName;
+    document.getElementById('profile-joined').textContent = joinDate;
+    document.getElementById('profile-logins').textContent = loginCount;
+}
+
+let unlockedAchievements = JSON.parse(localStorage.getItem('unlockedAchievements')) || [];
+
+function getAchievementDefinitions() {
+    return [
+        { key: 'first_steps', name: 'First Steps', desc: 'Added your first task, goal or habit', icon: '<path d="M5 3v18"/><path d="M5 4h13l-4 4 4 4H5"/>', check: function () { return tasks.length > 0 || goals.length > 0 || habits.length > 0; } },
+        { key: 'habit_starter', name: 'Habit Starter', desc: 'Checked off a habit for the first time', icon: '<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>', check: function () { return habits.some(function (h) { return h.completedDates.length > 0; }); } },
+        { key: 'streak_7', name: '7-Day Streak', desc: 'Kept a habit going for 7 days straight', icon: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>', check: function () { return habits.some(function (h) { return calculateStreak(h) >= 7; }); } },
+        { key: 'streak_30', name: '30-Day Streak', desc: 'Kept a habit going for 30 days straight', icon: '<circle cx="12" cy="8" r="6"/><path d="M9 13.5L7 22l5-3 5 3-2-8.5"/>', check: function () { return habits.some(function (h) { return calculateStreak(h) >= 30; }); } },
+        { key: 'goal_getter', name: 'Goal Getter', desc: 'Hit the target on a goal', icon: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/>', check: function () { return goals.some(function (g) { return getGoalCurrentAmount(g) >= g.target; }); } },
+        { key: 'goal_crusher', name: 'Goal Crusher', desc: 'Had 3 goals hit their target at the same time', icon: '<path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 5"/><path d="M17 6h3a3 3 0 0 1-3 5"/><path d="M9 20h6"/><path d="M12 15v5"/>', check: function () { return goals.filter(function (g) { return getGoalCurrentAmount(g) >= g.target; }).length >= 3; } },
+        { key: 'perfect_day', name: 'Perfect Day', desc: 'Scored 100% overall in a single day', icon: '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01z"/>', check: function () { return Object.keys(scoreHistory).some(function (d) { return scoreHistory[d] === 100; }); } },
+        { key: 'flawless_streak', name: 'Flawless Streak', desc: 'Scored 100% on two different days', icon: '<g transform="translate(1.1,6.8) scale(0.45)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01z"/></g><g transform="translate(12.1,6.8) scale(0.45)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01z"/></g>', check: function () { return Object.keys(scoreHistory).filter(function (d) { return scoreHistory[d] === 100; }).length >= 2; } },
+        { key: 'century_club', name: 'Century Club', desc: 'Finished 100 focus sessions in total', icon: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6"/>', check: function () { return Object.keys(sessionLog).reduce(function (sum, d) { return sum + sessionLog[d]; }, 0) >= 100; } },
+        { key: 'deep_focus', name: 'Deep Focus', desc: 'Finished 5 or more focus sessions in a single day', icon: '<path d="M3 12c3-4 6-6 9-6s6 2 9 6c-3 4-6 6-9 6s-6-2-9-6z"/><circle cx="12" cy="12" r="3"/>', check: function () { return Object.keys(sessionLog).some(function (d) { return sessionLog[d] >= 5; }); } },
+        { key: 'consistent_tracker', name: 'Consistent Tracker', desc: 'Logged a score on 14 different days', icon: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/>', check: function () { return Object.keys(scoreHistory).length >= 14; } },
+        { key: 'veteran_tracker', name: 'Veteran Tracker', desc: 'Logged a score on 100 different days', icon: '<rect x="4" y="14" width="4" height="7" rx="1"/><rect x="10" y="9" width="4" height="12" rx="1"/><rect x="16" y="4" width="4" height="17" rx="1"/>', check: function () { return Object.keys(scoreHistory).length >= 100; } },
+        { key: 'routine_builder', name: 'Routine Builder', desc: 'Added 5 or more routine tasks', icon: '<path d="M9 6h11"/><path d="M9 12h11"/><path d="M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/>', check: function () { return tasks.length >= 5; } },
+        { key: 'pinned_down', name: 'Pinned Down', desc: 'Pinned a goal to Journey', icon: '<path d="M12 21s7-7.58 7-12A7 7 0 0 0 5 9c0 4.42 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/>', check: function () { return goals.some(function (g) { return g.trackInJourney; }); } },
+        { key: 'loyal_user', name: 'Loyal User', desc: 'Logged in on 10 different days', icon: '<path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/>', check: function () { return loginDays.length >= 10; } },
+        { key: 'two_weeks_strong', name: 'Two Weeks Strong', desc: 'Been using the app for 14 days or more', icon: '<path d="M12 20V10"/><path d="M12 10c0-4-4-6-8-5 1 4 4 6 8 5z"/><path d="M12 10c0-3 3-5 6-4-1 3-3 5-6 4z"/>', check: function () { return getDaysSinceJoin() >= 14; } }
+    ];
+}
+
+function checkAchievements() {
+    const definitions = getAchievementDefinitions();
+    const newlyUnlocked = [];
+
+    definitions.forEach(function (def) {
+        const alreadyUnlocked = unlockedAchievements.indexOf(def.key) !== -1;
+        if (!alreadyUnlocked && def.check()) {
+            unlockedAchievements.push(def.key);
+            newlyUnlocked.push(def);
+        }
+    });
+
+    if (newlyUnlocked.length > 0) {
+        localStorage.setItem('unlockedAchievements', JSON.stringify(unlockedAchievements));
+        showAchievementPopup(newlyUnlocked);
+    }
+}
+
+function buildBadgeCard(def, isUnlocked) {
+    const card = document.createElement('div');
+    card.className = 'badge-card' + (isUnlocked ? ' unlocked' : '');
+    card.innerHTML = `
+        <div class="badge-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${def.icon}</svg></div>
+        <div class="badge-name">${def.name}</div>
+        <div class="badge-desc">${def.desc}</div>
+        <span class="badge-status ${isUnlocked ? 'achieved' : 'locked'}">${isUnlocked ? '✓ Achieved' : 'Not Achieved'}</span>
+    `;
+    return card;
+}
+
+function renderAchievements() {
+    const container = document.getElementById('achievements-grid');
+    const subtitleEl = document.getElementById('achievements-subtitle');
+    const definitions = getAchievementDefinitions();
+    const earned = definitions.filter(function (def) { return unlockedAchievements.indexOf(def.key) !== -1; });
+
+    subtitleEl.textContent = earned.length + '/' + definitions.length + ' unlocked';
+    container.innerHTML = '';
+
+    if (earned.length === 0) {
+        container.innerHTML = '<p class="empty">No achievements earned yet. Keep using the app to unlock your first one.</p>';
+        return;
+    }
+
+    earned.forEach(function (def) {
+        const card = document.createElement('div');
+        card.className = 'badge-card unlocked';
+        card.innerHTML = `
+            <div class="badge-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${def.icon}</svg></div>
+            <div class="badge-name">${def.name}</div>
+            <div class="badge-desc">${def.desc}</div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function renderAllAchievements() {
+    const subtitleEl = document.getElementById('all-achievements-subtitle');
+    const achievedContainer = document.getElementById('achieved-grid');
+    const notAchievedContainer = document.getElementById('not-achieved-grid');
+    const definitions = getAchievementDefinitions();
+
+    const earned = definitions.filter(function (def) { return unlockedAchievements.indexOf(def.key) !== -1; });
+    const notEarned = definitions.filter(function (def) { return unlockedAchievements.indexOf(def.key) === -1; });
+
+    subtitleEl.textContent = earned.length + '/' + definitions.length + ' unlocked';
+
+    achievedContainer.innerHTML = '';
+    if (earned.length === 0) {
+        achievedContainer.innerHTML = '<p class="empty">Nothing unlocked yet.</p>';
+    } else {
+        earned.forEach(function (def) {
+            achievedContainer.appendChild(buildBadgeCard(def, true));
+        });
+    }
+
+    notAchievedContainer.innerHTML = '';
+    if (notEarned.length === 0) {
+        notAchievedContainer.innerHTML = '<p class="empty">You\'ve unlocked everything. Nice work.</p>';
+    } else {
+        notEarned.forEach(function (def) {
+            notAchievedContainer.appendChild(buildBadgeCard(def, false));
+        });
+    }
+}
+
 const exportBtn = document.getElementById('export-btn');
 const importInput = document.getElementById('import-input');
 
-exportBtn.addEventListener('click', function () {
+function exportData() {
     const data = {
         userName: userName,
+        loginCount: loginCount,
+        loginDays: loginDays,
+        joinDate: joinDate,
+        unlockedAchievements: unlockedAchievements,
         tasks: tasks,
         goals: goals,
         habits: habits,
@@ -1321,7 +1582,12 @@ exportBtn.addEventListener('click', function () {
     link.click();
 
     URL.revokeObjectURL(url);
-});
+
+    localStorage.setItem('lastExportTime', Date.now());
+    renderBackupReminder();
+}
+
+exportBtn.addEventListener('click', exportData);
 
 importInput.addEventListener('change', function () {
     const file = importInput.files[0];
@@ -1336,6 +1602,10 @@ importInput.addEventListener('change', function () {
             const data = JSON.parse(reader.result);
 
             userName = data.userName || userName;
+            loginCount = data.loginCount || 0;
+            loginDays = data.loginDays || [];
+            joinDate = data.joinDate || getTodayString();
+            unlockedAchievements = data.unlockedAchievements || [];
             tasks = data.tasks || [];
             goals = data.goals || [];
             habits = data.habits || [];
@@ -1363,6 +1633,10 @@ importInput.addEventListener('change', function () {
             });
 
             localStorage.setItem('userName', userName);
+            localStorage.setItem('loginCount', loginCount);
+            localStorage.setItem('loginDays', JSON.stringify(loginDays));
+            localStorage.setItem('joinDate', joinDate);
+            localStorage.setItem('unlockedAchievements', JSON.stringify(unlockedAchievements));
             localStorage.setItem('tasks', JSON.stringify(tasks));
             localStorage.setItem('goals', JSON.stringify(goals));
             localStorage.setItem('habits', JSON.stringify(habits));
@@ -1373,11 +1647,12 @@ importInput.addEventListener('change', function () {
 
             hideUndoToast();
 
-            document.getElementById('greeting').textContent = '\u{1F464} ' + userName + ' \u00b7 ' + getFormattedDate();
+            document.getElementById('greeting').textContent = getFormattedDate();
             renderRoutine();
             renderGoals();
             renderHabits();
             renderOverview();
+            renderProfile();
 
             alert('Data imported successfully.');
         } catch (error) {
