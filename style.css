@@ -190,6 +190,18 @@ body {
   margin-top: 2px;
 }
 
+.back-btn {
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  color: var(--text-sub);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  margin-bottom: 14px;
+}
+
 .progress-bar {
   background: var(--track-bg);
   border-radius: 6px;
@@ -756,6 +768,37 @@ form button {
   color: var(--text-sub);
 }
 
+.backup-reminder-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.backup-reminder-text {
+  font-size: 12px;
+  color: var(--text-sub);
+  flex: 1 1 200px;
+}
+
+.backup-reminder-btn {
+  background: #fbbf24;
+  border: none;
+  color: #1a1206;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .history-stats {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -925,6 +968,151 @@ form button {
   font-size: 10px;
   color: var(--text-muted);
   white-space: nowrap;
+}
+
+.profile-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.profile-stat {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+}
+
+.profile-stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.profile-stat-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.profile-links {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.profile-links button {
+  flex: 1;
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  color: var(--text);
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.view-all-btn {
+  width: 100%;
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  color: var(--text);
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.badge-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 18px 14px;
+  text-align: center;
+  opacity: 0.4;
+}
+
+.badge-card.unlocked {
+  opacity: 1;
+  border-color: rgba(251, 191, 36, 0.4);
+  background: rgba(251, 191, 36, 0.08);
+}
+
+.badge-icon-wrap {
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--track-bg);
+  border: 2px solid var(--card-border);
+  color: var(--text-muted);
+}
+
+.badge-icon-wrap svg {
+  width: 34px;
+  height: 34px;
+}
+
+.badge-card.unlocked .badge-icon-wrap {
+  background: rgba(251, 191, 36, 0.15);
+  border-color: rgba(251, 191, 36, 0.5);
+  color: #fbbf24;
+}
+
+.badge-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.badge-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.badge-status {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-top: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-status.achieved {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--done-text);
+}
+
+.badge-status.locked {
+  background: var(--track-bg);
+  color: var(--text-muted);
 }
 
 .logic-card {
@@ -1225,4 +1413,76 @@ form button {
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
+}
+
+.achievement-popup {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1a1206;
+  padding: 14px 16px 14px 20px;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 60;
+  max-width: 320px;
+}
+
+.achievement-popup.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.achievement-popup-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.achievement-popup-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.achievement-popup-text {
+  flex: 1;
+}
+
+.achievement-popup-title {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.achievement-popup-message {
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.achievement-popup-close {
+  background: rgba(0, 0, 0, 0.15);
+  border: none;
+  color: #1a1206;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
